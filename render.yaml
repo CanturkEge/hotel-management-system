@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: meridian-hotel-management
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "10000"
+      - key: AllowedHosts
+        value: "*"
+      - key: ConnectionStrings__HotelDatabase
+        sync: false

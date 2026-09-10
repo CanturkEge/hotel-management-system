@@ -9,6 +9,7 @@ using HotelManagement.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var setup=args.Contains("--setup");
@@ -35,6 +36,11 @@ builder.Services.ConfigureApplicationCookie(options=> {
     options.ExpireTimeSpan=TimeSpan.FromHours(4); options.SlidingExpiration=true;
 });
 builder.Services.Configure<SecurityStampValidatorOptions>(options=>options.ValidationInterval=TimeSpan.Zero);
+builder.Services.Configure<ForwardedHeadersOptions>(options=> {
+    options.ForwardedHeaders=ForwardedHeaders.XForwardedFor|ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddScoped(typeof(IRepository<>),typeof(EfRepository<>));
 builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
 builder.Services.AddScoped<IHotelService,HotelService>();
@@ -62,6 +68,7 @@ if(setup)
 
 // Invariant form parsing keeps decimal points and ISO dates consistent with HTML number/date controls.
 var culture=CultureInfo.InvariantCulture;
+app.UseForwardedHeaders();
 app.UseRequestLocalization(new RequestLocalizationOptions {DefaultRequestCulture=new(culture),SupportedCultures=[culture],SupportedUICultures=[culture]});
 app.UseExceptionHandler("/Home/Error");
 if(!app.Environment.IsDevelopment()) { app.UseHsts(); app.UseHttpsRedirection(); }
@@ -77,6 +84,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.MapGet("/health",()=>Results.Ok(new {status="ok"})).AllowAnonymous();
 app.MapControllerRoute("default","{controller=Home}/{action=Index}/{id?}");
 app.Run();
 
