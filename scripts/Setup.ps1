@@ -40,7 +40,7 @@ try {
         $connection['Database'] = 'postgres'
         $connection['Username'] = $dbUser.Trim()
         $connection['Password'] = $dbPassword
-        $connection['SSL Mode'] = 'VerifyFull'
+        $connection['SSL Mode'] = 'Require'
         $connection['Maximum Pool Size'] = 10
         $connection['Timeout'] = 15
         $secrets = @{

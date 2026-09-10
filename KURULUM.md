@@ -194,7 +194,7 @@ Açılan, proje dışındaki secrets.json dosyasına aşağıdaki şemayı yazı
 
 ```json
 {
-  "ConnectionStrings:HotelDatabase": "Host=PANELDEKI_HOST;Port=5432;Database=postgres;Username=PANELDEKI_USERNAME;Password=DB_SIFRESI;SSL Mode=VerifyFull;Maximum Pool Size=10;Timeout=15",
+  "ConnectionStrings:HotelDatabase": "Host=PANELDEKI_HOST;Port=5432;Database=postgres;Username=PANELDEKI_USERNAME;Password=DB_SIFRESI;SSL Mode=Require;Maximum Pool Size=10;Timeout=15",
   "Seed:SuperAdmin:Email": "SUPER_ADMIN_EPOSTANIZ",
   "Seed:SuperAdmin:Password": "KENDINIZIN_BELIRLEDIGI_GUCLU_SIFRE",
   "Seed:Admin:Email": "FARKLI_ADMIN_EPOSTANIZ",
@@ -228,7 +228,7 @@ dotnet run --project src/HotelManagement.Web --launch-profile http
 | NU1101/NU1301 | NuGet kaynağı ve internet erişimi; proxy/şirket ağı varsa mentorla kontrol. |
 | Şifre doğrulaması başarısız | Supabase DB şifresi + Session pooler tam Username. |
 | Sunucuya ulaşılamıyor | Proje uyku/duraklatılmış mı? Host doğru mu? IPv4 için Session pooler 5432 mi? |
-| SSL sertifika hatası | Host/tarih/saat ve Supabase CA zincirini kontrol edin; sertifika doğrulamasını kapatmayın. |
+| SSL sertifika hatası | Session pooler için `SSL Mode=Require` kullanıldığını ve host değerinde `tcp://` bulunmadığını kontrol edin. Üretimde tam sertifika doğrulaması için Supabase Database Settings bölümünden root sertifikayı indirip `VerifyFull` ile yapılandırın. |
 | relation/table does not exist | Setup başarılı mı? Aynı bağlantı mı? Migration klasörünü silmeden ilk setup hatasını inceleyin. |
 | table already exists | Başka proje/elle kurulmuş şemaya bağlanıyor olabilirsiniz. DB'yi silmeyin; hedef ve migration geçmişini inceleyin. |
 | Oda listesi boş | Oda tipi ve fiziksel oda satışa açık mı? Temizlik/bakım görevi var mı? |
