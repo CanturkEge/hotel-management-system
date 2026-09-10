@@ -1,0 +1,12 @@
+@model LoginInput
+@{ViewData["Title"]=Model.Staff?"Personel girişi":"Müşteri girişi";}
+<section class="auth"><div><p class="eyebrow">@(Model.Staff?"EKİP ALANI":"MİSAFİR ALANI")</p><h1>@ViewData["Title"]</h1><p>@(Model.Staff?"Yetkinize ait yönetim ve operasyon ekranlarına erişin.":"Rezervasyonlarınızı ve tamamlanan konaklamalarınızı takip edin.")</p></div>
+<form asp-action="Login" method="post" class="panel form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<input asp-for="Staff" type="hidden" />
+<label asp-for="Email">E-posta</label><input asp-for="Email" type="email" autocomplete="username" required />
+<label asp-for="Password">Şifre</label><input asp-for="Password" autocomplete="current-password" required />
+<button type="submit">Giriş yap</button>
+@if(!Model.Staff){<a asp-action="Register">Hesabım yok, kayıt ol</a><a asp-action="StaffLogin">Personel girişi</a>}
+else{<a asp-action="Login">Müşteri girişine dön</a>}
+</form></section>

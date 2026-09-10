@@ -1,0 +1,20 @@
+@model SearchPage
+@{ViewData["Title"]="Müsaitlik";}
+<p class="eyebrow">REZERVASYON</p><h1>Ne zaman gelmek istersiniz?</h1>
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<form asp-action="Search" method="get" class="search-bar">
+    <label>Giriş<input type="date" name="start" value="@Model.Start.ToString("yyyy-MM-dd")" required /></label>
+    <label>Çıkış<input type="date" name="end" value="@Model.End.ToString("yyyy-MM-dd")" required /></label>
+    <label>Misafir<input type="number" name="guests" value="@Model.Guests" min="1" max="20" required /></label>
+    <button type="submit">Müsaitliği kontrol et</button>
+</form>
+<p class="muted">1–30 gecelik konaklamalar. Çıkış günü, sonraki misafirin giriş günü olabilir. Temizlik ve bakımda olan odalar listelenmez.</p>
+@if(Model.Searched && ViewData.ModelState.IsValid)
+{
+    <h2>@Model.Rooms.Count uygun oda</h2>
+    @if(Model.Rooms.Count==0){<p class="empty">Bu tarihlerde uygun oda bulunamadı. Tarih veya misafir sayısını değiştirebilirsiniz.</p>}
+    <div class="cards">
+    @foreach(var r in Model.Rooms)
+    {<article class="panel"><p class="eyebrow">ODA @r.Number · KAT @r.Floor</p><h3>@r.TypeName</h3><p>@r.Capacity kişiye kadar</p><p><strong>@Ui.Money(r.Price * (Model.End.DayNumber-Model.Start.DayNumber))</strong> / toplam</p><a class="button" asp-controller="Bookings" asp-action="Create" asp-route-roomId="@r.Id" asp-route-start="@Model.Start.ToString("yyyy-MM-dd")" asp-route-end="@Model.End.ToString("yyyy-MM-dd")" asp-route-guests="@Model.Guests">Bu odayı seç</a></article>}
+    </div>
+}

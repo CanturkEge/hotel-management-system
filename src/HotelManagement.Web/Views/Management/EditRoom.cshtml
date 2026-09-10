@@ -1,0 +1,9 @@
+@model RoomEditPage
+@{ViewData["Title"]=Model.Input.Id==Guid.Empty?"Oda ekle":"Oda düzenle";}
+<h1>@ViewData["Title"]</h1><form asp-action="EditRoom" method="post" class="panel form-stack narrow">
+<div asp-validation-summary="All" class="validation" role="alert"></div><input asp-for="Input.Id" type="hidden" />
+<label>Oda numarası<input asp-for="Input.Number" required maxlength="12" placeholder="101 veya A-101" /></label>
+<label>Kat<input asp-for="Input.Floor" type="number" min="-5" max="100" required /></label>
+<label>Oda tipi<select asp-for="Input.RoomTypeId" required><option value="">Seçin</option>@foreach(var t in Model.Types){<option value="@t.Id">@t.Name</option>}</select></label>
+<label class="check"><input asp-for="Input.IsActive" /> Satışa açık</label><button type="submit">Kaydet</button><a asp-action="Rooms">Vazgeç</a>
+</form>

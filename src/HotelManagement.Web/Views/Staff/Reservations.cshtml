@@ -1,0 +1,16 @@
+@model List<ReservationDto>
+@{ViewData["Title"]="Rezervasyon yönetimi";}
+<div class="section-heading"><div><p class="eyebrow">RESEPSİYON</p><h1>Rezervasyonlar</h1></div><a class="button" asp-action="Create">Müşteri adına talep aç</a></div>
+<label class="filter">Listede ara<input type="search" data-filter="booking-table" placeholder="Ad, oda, kod veya durum" /></label>
+<div class="table-scroll"><table id="booking-table"><thead><tr><th>Misafir / kod</th><th>Oda</th><th>Tarihler</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>
+@foreach(var r in Model)
+{
+<tr><td>@r.GuestName<small>@r.GuestPhone</small><small class="code">@r.Code</small></td><td>@r.RoomNumber<small>@r.TypeName</small></td><td>@r.CheckInDate.ToString("dd.MM.yyyy")<small>@r.CheckOutDate.ToString("dd.MM.yyyy")</small></td><td>@Ui.Money(r.TotalPrice)</td><td><span class="badge">@Ui.Status(r.Status)</span></td><td>
+<form asp-action="Transition" method="post" class="actions" data-confirm="Rezervasyon durumu güncellensin mi?"><input type="hidden" name="id" value="@r.Id" />
+@if(r.Status==ReservationStatus.Pending){<button name="target" value="Confirmed">Onayla</button><button class="danger" name="target" value="Rejected">Reddet</button>}
+@if(r.Status==ReservationStatus.Confirmed){<button name="target" value="CheckedIn">Giriş yap</button><button class="danger" name="target" value="Cancelled">İptal</button>}
+@if(r.Status==ReservationStatus.CheckedIn){<button name="target" value="CheckedOut">Çıkış yap</button>}
+</form></td></tr>
+}
+</tbody></table></div>
+@if(Model.Count==0){<p class="empty">Henüz rezervasyon yok.</p>}

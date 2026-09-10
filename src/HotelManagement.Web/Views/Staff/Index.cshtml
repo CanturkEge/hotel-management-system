@@ -1,0 +1,5 @@
+@model DashboardDto
+@{ViewData["Title"]="Yönetim paneli";}
+<p class="eyebrow">OPERASYON MERKEZİ</p><h1>Genel bakış</h1>
+<div class="stats"><article><span>Aktif oda</span><strong>@Model.ActiveRooms</strong></article><article><span>Konaklanan oda</span><strong>@Model.OccupiedRooms</strong></article><article><span>Onay bekleyen</span><strong>@Model.PendingBookings</strong></article><article><span>Açık görev</span><strong>@Model.OpenJobs</strong></article></div>
+<div class="split"><section class="panel"><h2>Rezervasyon akışı</h2><p>Yeni talepleri inceleyin, uygun olanları onaylayın. Giriş ve çıkış işlemleri oda durumunu otomatik günceller.</p><a class="button" asp-action="Reservations">Rezervasyonları yönet</a></section><section class="panel"><h2>Tamamlanan konaklamalar</h2><p class="big-number">@Ui.Money(Model.CompletedStayRevenue)</p><small>Konaklama bedellerinin toplamıdır; tahsilat veya muhasebe raporu değildir.</small></section></div>

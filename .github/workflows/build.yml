@@ -1,0 +1,15 @@
+name: Build and business rules
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore HotelManagement.sln
+      - run: dotnet build HotelManagement.sln --no-restore --configuration Release
+      - run: dotnet run --project tests/HotelManagement.Tests --no-build --configuration Release

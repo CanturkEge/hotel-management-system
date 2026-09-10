@@ -1,0 +1,12 @@
+@model StaffBookingPage
+@{ViewData["Title"]="Müşteri adına rezervasyon";}
+<h1>Müşteri adına rezervasyon</h1><p>Önce müşterinin kendi hesabı bulunmalı. Talep oluşturulduktan sonra rezervasyon listesinden onaylanır.</p>
+<form asp-action="Create" method="post" class="panel form-stack narrow">
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<label>Müşteri hesabı<select asp-for="CustomerId" required><option value="">Seçin</option>@foreach(var c in Model.Customers){<option value="@c.Id">@c.FullName · @c.Email</option>}</select></label>
+<label>Oda<select asp-for="Input.RoomId" required><option value="">Seçin</option>@foreach(var r in Model.Rooms){<option value="@r.Id">@r.Number · @r.TypeName · @Ui.Status(r.Status)</option>}</select></label>
+<div class="form-grid"><label>Giriş<input asp-for="Input.CheckInDate" type="date" required /></label><label>Çıkış<input asp-for="Input.CheckOutDate" type="date" required /></label></div>
+<label>Misafir sayısı<input asp-for="Input.GuestCount" type="number" min="1" max="20" required /></label>
+<label>Ad soyad<input asp-for="Input.GuestName" required maxlength="100" /></label><label>Telefon<input asp-for="Input.GuestPhone" required minlength="7" maxlength="30" /></label>
+<button type="submit">Talebi oluştur</button>
+</form>

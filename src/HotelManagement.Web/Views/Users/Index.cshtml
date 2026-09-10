@@ -1,0 +1,15 @@
+@model UsersPage
+@{ViewData["Title"]="Hesaplar ve yetkiler";string[] staffRoles=[Roles.Reception,Roles.Cleaner,Roles.Maintenance];}
+<p class="eyebrow">SÜPER ADMİN</p><h1>Hesaplar & yetkiler</h1>
+<div class="split"><section><div class="table-scroll"><table><thead><tr><th>Hesap</th><th>Yetki</th></tr></thead><tbody>
+@foreach(var u in Model.Users)
+{<tr><td>@u.FullName<small>@u.Email</small></td><td>
+@if(staffRoles.Contains(u.Role)){<form asp-action="Role" method="post" class="actions"><input type="hidden" name="id" value="@u.Id" /><select name="role" aria-label="@u.FullName yetkisi">@foreach(var role in staffRoles){<option value="@role" selected="@(role==u.Role)">@Ui.Role(role)</option>}</select><button type="submit">Kaydet</button></form>}
+else{<span class="badge">@Ui.Role(u.Role)</span>}
+</td></tr>}
+</tbody></table></div></section>
+<aside><form asp-action="Create" method="post" class="panel form-stack"><h2>Personel hesabı oluştur</h2><div asp-validation-summary="All" class="validation" role="alert"></div>
+<label>Ad soyad<input asp-for="Input.FullName" required maxlength="100" /></label><label>E-posta<input asp-for="Input.Email" type="email" required /></label>
+<label>Şifre<input asp-for="Input.Password" autocomplete="new-password" required minlength="12" /></label><small>12+ karakter, büyük/küçük harf, rakam ve özel karakter.</small>
+<label>Şifre tekrar<input asp-for="Input.ConfirmPassword" autocomplete="new-password" required /></label>
+<label>Yetki<select asp-for="Input.Role">@foreach(var role in staffRoles){<option value="@role">@Ui.Role(role)</option>}</select></label><button type="submit">Hesap oluştur</button><small>Başlangıçta tek admin ve tek süper admin oluşturulur; bu hesapların yetkisi buradan kaldırılamaz.</small></form></aside></div>

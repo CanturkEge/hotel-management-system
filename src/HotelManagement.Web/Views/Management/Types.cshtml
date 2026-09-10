@@ -1,0 +1,7 @@
+@model List<RoomTypeDto>
+@{ViewData["Title"]="Oda tipleri";}
+<div class="section-heading"><div><p class="eyebrow">KATALOG</p><h1>Oda tipleri</h1></div><a class="button" asp-action="EditType">Oda tipi ekle</a></div>
+<p>Oda tipi açıklama, görseller ve fiyatı tutar. Fiziksel odalar ise 101, 102 gibi oda numaralarıdır.</p>
+<div class="table-scroll"><table><thead><tr><th>Ad</th><th>Kapasite</th><th>Alan</th><th>Gecelik</th><th>Yayın</th><th></th></tr></thead><tbody>
+@foreach(var t in Model){<tr><td>@t.Name</td><td>@t.Capacity kişi · @t.BedCount yatak</td><td>@t.SizeInSquareMeters m²</td><td>@Ui.Money(t.BasePrice)</td><td>@(t.IsActive?"Aktif":"Pasif")</td><td><a asp-action="EditType" asp-route-id="@t.Id">Düzenle</a></td></tr>}
+</tbody></table></div>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><UserSecretsId>HotelManagement-Ege-v1</UserSecretsId></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HotelManagement.Application/HotelManagement.Application.csproj" />
+    <ProjectReference Include="../HotelManagement.Infrastructure/HotelManagement.Infrastructure.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

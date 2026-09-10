@@ -1,0 +1,16 @@
+@model DetailPage
+@{ViewData["Title"]=Model.Type.Name;var photos=Ui.Images(Model.Type.ImageUrls);}
+<a asp-action="Index">← Tüm oda tipleri</a>
+<div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h1>@Model.Type.Name</h1></div><strong>@Ui.Money(Model.Type.BasePrice) / gece</strong></div>
+<div class="gallery">
+@if(photos.Length==0){<img src="~/images/room-demo.png" alt="Temsili oda görseli" />}
+@foreach(var photo in photos){<img src="@photo" alt="@Model.Type.Name oda görseli" loading="lazy" />}
+</div>
+<div class="split"><section><h2>Odanız hakkında</h2><p class="prewrap">@Model.Type.Description</p><p>@Model.Type.SizeInSquareMeters m² · @Model.Type.Capacity kişi · @Model.Type.BedCount yatak</p><h3>Olanaklar</h3><p>@Model.Type.Amenities</p></section>
+<aside class="panel"><h2>Odanızı seçin</h2><p>Odayı seçtikten sonra dolu tarih aralıklarını görebilirsiniz.</p>
+@foreach(var r in Model.Rooms){<div class="list-row"><span>Oda @r.Number <small>@Ui.Status(r.Status)</small></span><a asp-controller="Bookings" asp-action="Create" asp-route-roomId="@r.Id">Tarihleri gör</a></div>}
+@if(Model.Rooms.Count==0){<p>Şu anda satışa açık fiziksel oda yok.</p>}
+</aside></div>
+<h2>Konaklama yorumları</h2>
+@if(Model.Reviews.Count==0){<p class="empty">Henüz yayınlanan yorum yok.</p>}
+@foreach(var review in Model.Reviews){<article class="review"><strong>@review.Rating / 5</strong><p>@review.Comment</p><small>Doğrulanmış konaklama</small></article>}

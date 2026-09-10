@@ -1,0 +1,25 @@
+@model CatalogPage
+@{ViewData["Title"]="Kendinize yer açın";}
+<section class="hero">
+    <div class="hero-copy"><p class="eyebrow">MERIDIAN HOTEL</p><h1>Biraz yavaşlayın.<br />Kendinize yer açın.</h1><p>Odanızı keşfedin, size uygun tarihleri seçin. Konaklama planınız tek bir yerde.</p><a class="button" asp-action="Search">Müsait odaları keşfet</a></div>
+    <figure><img src="~/images/room-demo.png" alt="Aydınlık bir otel odasının temsili görseli" /><figcaption>Temsili görsel · Eğitim projesi</figcaption></figure>
+</section>
+<section><div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h2>Size ait bir alan</h2></div><a asp-action="Search">Tarih seç ve karşılaştır</a></div>
+<div class="cards">
+@foreach(var t in Model.Types)
+{
+    var photo=Ui.Images(t.ImageUrls).FirstOrDefault();
+    <article class="room-card">
+        <img src="@(photo ?? Url.Content("~/images/room-demo.png"))" alt="@(photo==null ? "Temsili oda görseli" : t.Name)" loading="lazy" />
+        <div class="card-body"><p class="eyebrow">@t.SizeInSquareMeters m² · @t.Capacity misafir · @t.BedCount yatak</p><h3>@t.Name</h3><p class="clamp">@t.Description</p><div class="price-row"><span><strong>@Ui.Money(t.BasePrice)</strong><small> / gece</small></span><a asp-action="Details" asp-route-id="@t.Id">İncele</a></div></div>
+    </article>
+}
+</div>
+@if(Model.Types.Count==0){<p class="empty">Henüz yayınlanan oda tipi yok.</p>}
+</section>
+@if(Model.Reviews.Count>0)
+{
+<section><div class="section-heading"><div><p class="eyebrow">KONAKLAYANLARDAN</p><h2>Misafir yorumları</h2></div></div><div class="cards">
+@foreach(var r in Model.Reviews.Take(6)){<article class="review"><span class="badge">@r.Rating / 5</span><h3>@r.TypeName</h3><p>@r.Comment</p><small>Doğrulanmış konaklama</small></article>}
+</div></section>
+}

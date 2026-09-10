@@ -1,0 +1,19 @@
+@model JobPage
+@{ViewData["Title"]="Temizlik ve bakım";}
+<p class="eyebrow">OPERASYON</p><h1>Temizlik & bakım</h1>
+<p>Odanın tüm açık görevleri tamamlanmadan yeni rezervasyon alınamaz. Temizlik görevlisi yalnızca temizlik, teknik servis yalnızca bakım işini tamamlayabilir.</p>
+<details class="panel" open="@(!ViewData.ModelState.IsValid)"><summary>Yeni görev / arıza bildir</summary><form asp-action="Report" method="post" class="form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<label>Oda<select asp-for="Input.RoomId" required><option value="">Seçin</option>@foreach(var r in Model.Rooms){<option value="@r.Id">@r.Number · @r.TypeName</option>}</select></label>
+<label>Görev türü<select asp-for="Input.Kind"><option value="Maintenance">Arıza / bakım</option><option value="Cleaning">Temizlik</option></select></label>
+<label>Açıklama<textarea asp-for="Input.Description" required minlength="3" maxlength="1000" rows="3"></textarea></label><button type="submit">Görevi aç</button>
+</form></details>
+<div class="cards">
+@foreach(var j in Model.Jobs)
+{<article class="panel"><p class="eyebrow">@(j.Kind==JobKind.Cleaning?"TEMİZLİK":"TEKNİK SERVİS")</p><h2>Oda @j.RoomNumber</h2><p>@j.Description</p><small>Açılış: @j.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm") UTC</small>
+@if(j.CompletedAtUtc!=null){<p class="badge">Tamamlandı</p><small>@j.CompletedBy</small>}
+else if(!User.IsInRole(Roles.Reception)){<form asp-action="Complete" method="post" data-confirm="İşlem gerçekten tamamlandı mı?"><input type="hidden" name="id" value="@j.Id" /><button type="submit">@(j.Kind==JobKind.Cleaning?"Temizlendi":"Arıza giderildi")</button></form>}
+else{<p class="badge">Bekliyor</p>}
+</article>}
+</div>
+@if(Model.Jobs.Count==0){<p class="empty">Rolünüze ait görev bulunmuyor.</p>}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@(ViewData["Title"] ?? "Otel") · MERIDIAN</title>
+    <meta name="description" content="Meridian otel odaları, müsaitlik ve rezervasyon." />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+<header class="site-header">
+    <a class="brand" asp-controller="Home" asp-action="Index">MERIDIAN<span>HOTEL & STAY</span></a>
+    <nav aria-label="Ana gezinme">
+        <a asp-controller="Home" asp-action="Index">Odalar</a>
+        <a asp-controller="Home" asp-action="Search">Müsaitlik</a>
+        @if(User.Identity?.IsAuthenticated==true)
+        {
+            if(User.IsInRole(Roles.Customer)) {<a asp-controller="Bookings" asp-action="Index">Konaklamalarım</a>}
+            else {<a asp-controller="Staff" asp-action="Index">Personel paneli</a>}
+            <form asp-controller="Account" asp-action="Logout" method="post"><button class="quiet" type="submit">Çıkış yap</button></form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login">Müşteri girişi</a>
+            <a class="button small" asp-controller="Home" asp-action="Search">Rezervasyon</a>
+        }
+    </nav>
+</header>
+@if(User.Identity?.IsAuthenticated==true && !User.IsInRole(Roles.Customer))
+{
+    <nav class="staff-nav" aria-label="Personel işlemleri">
+        @if(User.IsInRole(Roles.Admin)||User.IsInRole(Roles.SuperAdmin)||User.IsInRole(Roles.Reception))
+        {<a asp-controller="Staff" asp-action="Index">Genel bakış</a><a asp-controller="Staff" asp-action="Reservations">Rezervasyonlar</a>}
+        @if(User.IsInRole(Roles.Admin)||User.IsInRole(Roles.SuperAdmin))
+        {<a asp-controller="Management" asp-action="Types">Oda tipleri</a><a asp-controller="Management" asp-action="Rooms">Fiziksel odalar</a><a asp-controller="Management" asp-action="Reviews">Yorumlar</a>}
+        <a asp-controller="Jobs" asp-action="Index">Temizlik & bakım</a>
+        @if(User.IsInRole(Roles.SuperAdmin)){<a asp-controller="Users" asp-action="Index">Hesaplar & yetkiler</a>}
+    </nav>
+}
+<main id="main" class="container">
+    @if(TempData["Success"] is string success){<div class="notice success" role="status">@success</div>}
+    @if(TempData["Error"] is string error){<div class="notice error" role="alert">@error</div>}
+    @RenderBody()
+</main>
+<footer><span>MERIDIAN · Otel yönetimi eğitim projesi</span><a asp-controller="Account" asp-action="StaffLogin">Personel girişi</a></footer>
+</body>
+</html>

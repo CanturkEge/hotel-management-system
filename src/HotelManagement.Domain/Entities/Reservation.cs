@@ -1,0 +1,25 @@
+using HotelManagement.Domain.Common;
+using HotelManagement.Domain.Enums;
+namespace HotelManagement.Domain.Entities;
+
+public class Reservation : BaseEntity
+{
+    public string Code { get; set; } = Guid.NewGuid().ToString("N").ToUpperInvariant();
+    public Guid CustomerId { get; set; }
+    public Guid RoomId { get; set; }
+    public Room Room { get; set; } = null!;
+    public Guid RoomTypeId { get; set; }
+    public string RoomTypeName { get; set; } = "";
+    public string RoomNumber { get; set; } = "";
+    public DateOnly CheckInDate { get; set; }
+    public DateOnly CheckOutDate { get; set; }
+    public int GuestCount { get; set; }
+    public string GuestName { get; set; } = "";
+    public string GuestPhone { get; set; } = "";
+    public decimal NightlyPrice { get; set; }
+    public decimal TotalPrice { get; set; }
+    public string Currency { get; set; } = "TRY";
+    public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+    public DateTime? ActualCheckInUtc { get; set; }
+    public DateTime? ActualCheckOutUtc { get; set; }
+}

@@ -1,0 +1,14 @@
+@model RoomTypeInput
+@{ViewData["Title"]=Model.Id==Guid.Empty?"Oda tipi ekle":"Oda tipi düzenle";}
+<h1>@ViewData["Title"]</h1>
+<form asp-action="EditType" method="post" class="panel form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div><input asp-for="Id" type="hidden" />
+<label>Oda tipi adı<input asp-for="Name" maxlength="100" required /></label>
+<label>Açıklama<textarea asp-for="Description" rows="4" maxlength="4000" required></textarea></label>
+<div class="form-grid"><label>Gecelik fiyat (TRY)<input asp-for="BasePrice" type="number" step="0.01" min="1" max="1000000" required /></label><label>Kapasite<input asp-for="Capacity" type="number" min="1" max="20" required /></label><label>Yatak sayısı<input asp-for="BedCount" type="number" min="1" max="20" required /></label><label>Alan (m²)<input asp-for="SizeInSquareMeters" type="number" min="5" max="1000" required /></label></div>
+<label>Olanaklar<input asp-for="Amenities" maxlength="1000" placeholder="Wi-Fi, Klima, Balkon" /></label>
+<label>Görseller<textarea asp-for="ImageUrls" rows="4" maxlength="8000" placeholder="Her satıra bir HTTPS görsel adresi"></textarea></label>
+<small>En fazla 8 adres. Supabase Storage'da herkese açık oda görselinizin URL'sini kullanabilirsiniz. Yalnızca kullanım hakkınız olan görselleri ekleyin. Boş bırakırsanız temsili görsel kullanılır.</small>
+<label class="check"><input asp-for="IsActive" /> Satışa açık</label>
+<div class="actions"><button type="submit">Kaydet</button><a asp-action="Types">Vazgeç</a></div>
+</form>

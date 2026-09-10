@@ -1,0 +1,17 @@
+@model BookingPage
+@{ViewData["Title"]="Rezervasyon talebi";}
+<p class="eyebrow">REZERVASYON TALEBİ</p><h1>@Model.Room.TypeName · @Model.Room.Number</h1>
+<div class="split"><form asp-action="Create" method="post" class="panel form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<input asp-for="Input.RoomId" type="hidden" />
+<div class="form-grid"><label>Giriş<input asp-for="Input.CheckInDate" type="date" required /></label><label>Çıkış<input asp-for="Input.CheckOutDate" type="date" required /></label></div>
+<label>Misafir sayısı<input asp-for="Input.GuestCount" type="number" min="1" max="@Model.Room.Capacity" required /></label>
+<label>Konaklayacak kişinin adı soyadı<input asp-for="Input.GuestName" autocomplete="name" required maxlength="100" /></label>
+<label>Telefon<input asp-for="Input.GuestPhone" type="tel" autocomplete="tel" required minlength="7" maxlength="30" /></label>
+<p><strong>@Ui.Money(Model.Room.Price)</strong> / gece. Toplam ücret, talep gönderilirken güncel gecelik fiyat üzerinden hesaplanır ve konaklamalarınızda gösterilir.</p>
+<button type="submit">Onaya gönder</button><small>Bu işlem ödeme almaz. Talep, resepsiyon onayından sonra kesinleşir.</small>
+</form><aside class="panel"><h2>Dolu tarih aralıkları</h2><p>Çıkış günü tekrar giriş yapılabilir; oda temizliği tamamlanmış olmalı.</p>
+@if(Model.Busy.Count==0){<p>Gelecek tarihlerde kesinleşmiş rezervasyon yok.</p>}
+@foreach(var b in Model.Busy){<div class="list-row"><span>@b.Start.ToString("dd.MM.yyyy") — @b.End.ToString("dd.MM.yyyy")</span><span class="badge">Dolu</span></div>}
+<p>Odanın şu anki durumu: <strong>@Ui.Status(Model.Room.Status)</strong></p>
+<a asp-controller="Home" asp-action="Search">Başka oda ara</a></aside></div>

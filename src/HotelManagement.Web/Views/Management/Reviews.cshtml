@@ -1,0 +1,6 @@
+@model List<ReviewDto>
+@{ViewData["Title"]="Yorum yönetimi";}
+<p class="eyebrow">MİSAFİR GERİ BİLDİRİMİ</p><h1>Yorumlar</h1>
+@if(Model.Count==0){<p class="empty">Henüz yorum yok.</p>}
+@foreach(var r in Model)
+{<article class="panel"><div class="section-heading"><h2>@r.TypeName · @r.Rating / 5</h2><span class="badge">@(r.IsApproved?"Yayında":"Yayında değil")</span></div><p>@r.Comment</p><form asp-action="Moderate" method="post"><input type="hidden" name="id" value="@r.Id" /><button name="approve" value="@(!r.IsApproved ? "true" : "false")">@(r.IsApproved?"Yayından kaldır":"Yayınla")</button></form></article>}

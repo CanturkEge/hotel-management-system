@@ -1,0 +1,9 @@
+@model List<RoomDto>
+@{ViewData["Title"]="Fiziksel odalar";}
+<div class="section-heading"><div><p class="eyebrow">ODA YÖNETİMİ</p><h1>Fiziksel odalar</h1></div><a class="button" asp-action="EditRoom">Oda ekle</a></div>
+<div class="table-scroll"><table><thead><tr><th>Oda</th><th>Tip / kat</th><th>Durum</th><th>Satış</th><th>İşlemler</th></tr></thead><tbody>
+@foreach(var r in Model)
+{<tr><td><strong>@r.Number</strong></td><td>@r.TypeName<small>Kat @r.Floor</small></td><td><span class="badge">@Ui.Status(r.Status)</span></td><td>@(r.IsActive?"Açık":"Kapalı")</td><td class="actions"><a asp-action="EditRoom" asp-route-id="@r.Id">Düzenle</a>
+@if(r.IsActive){<form asp-action="ArchiveRoom" method="post" data-confirm="Oda satıştan kaldırılsın mı? Geçmiş kayıtlar silinmez."><input type="hidden" name="id" value="@r.Id" /><button class="danger" type="submit">Kaldır</button></form>}
+</td></tr>}
+</tbody></table></div><p class="muted">Kaldırmak geçmişi silmez. Oda durumları giriş, çıkış ve görev tamamlamayla değişir.</p>

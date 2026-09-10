@@ -1,0 +1,13 @@
+@model RegisterInput
+@{ViewData["Title"]="Müşteri kaydı";}
+<section class="narrow"><p class="eyebrow">MİSAFİR ALANI</p><h1>Hesap oluştur</h1>
+<form asp-action="Register" method="post" class="panel form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div>
+<label asp-for="FullName">Ad soyad</label><input asp-for="FullName" autocomplete="name" required maxlength="100" />
+<label asp-for="Email">E-posta</label><input asp-for="Email" type="email" autocomplete="email" required />
+<label asp-for="Password">Şifre</label><input asp-for="Password" autocomplete="new-password" required minlength="12" />
+<small>En az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermeli.</small>
+<label asp-for="ConfirmPassword">Şifre tekrar</label><input asp-for="ConfirmPassword" autocomplete="new-password" required />
+<p class="muted">Bu bir eğitim ortamıdır; gerçek misafir veya hassas kişisel veri girmeyin.</p>
+<button type="submit">Hesap oluştur</button><a asp-action="Login">Zaten hesabım var</a>
+</form></section>
