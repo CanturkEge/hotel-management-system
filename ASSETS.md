@@ -1,8 +1,8 @@
 # Görseller
 
-`src/HotelManagement.Web/wwwroot/images/room-demo.png` bu proje için üretilen özgün, temsili görseldir.
+`src/HotelManagement.Web/wwwroot/images/room-demo.jpg` bu proje için üretilen özgün, temsili görseldir.
 Gerçek bir otelin veya odanın fotoğrafı değildir. Sitede eğitim/temsili kullanım olarak etiketlenir.
-Yöntem: built-in image generation. Boyut: 1536 × 1024 PNG.
+Yöntem: built-in image generation. Web sürümü: 1200 × 800 JPEG.
 
 Prompt:
 
