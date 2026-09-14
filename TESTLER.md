@@ -4,9 +4,8 @@
 
 - Kaynak dosyaları, proje referansları, yapılandırma JSON/XML, controller/view bağlantıları statik incelendi.
 - JavaScript için `node --check` çalıştırıldı.
-- ZIP bütünlüğü kontrol edildi.
-- .NET SDK, PostgreSQL ve PowerShell bu üretim ortamında yok: **C# / Razor derlemesi, 23 iş kuralı testi,
-  DB migration, Identity ve tarayıcı testleri burada çalıştırılmadı.**
+- Linux/.NET 10 ortamında C# / Razor derlemesi ve 25 iş kuralı testi başarıyla çalıştırıldı.
+- PostgreSQL migration, gerçek Identity oturumu ve tarayıcı akışları bu ortamda çalıştırılmadı.
 - Aşağıdaki adımları geçti demeden uygulamayı gerçek müşteriye yayınlamayın.
 
 ## 1. Derleme + servis testleri
@@ -26,12 +25,13 @@ dotnet run --project tests/HotelManagement.Tests
 Testler bellek içi repository ile servis davranışlarını kontrol eder; PostgreSQL transaction,
 RLS, gerçek concurrency, Identity cookie, CSRF veya MVC model binding yerine geçmez.
 
-Kapsanan 23 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
+Kapsanan 25 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
 fiyat snapshot, geçmiş tarih, sıfır gece, kapasite aşımı, temizlik kilidi, açık bakım kilidi,
 tekrar pending istek, çifte onay kontrolü, onaysız check-in, checkout-temizlik,
 başkasının rezervasyonunu iptal, konaklamadan yorum, tek yorum, yorum sahipliği,
 yanlış görev rolü, bakım sürerken temizliğin odayı açmaması, tüm görevlerin bitmesi,
-aktif rezervasyonlu odayı arşivleme ve tarihsel oda etiketlerinin korunması.
+aktif rezervasyonlu odayı arşivleme, ardışık toplu oda ekleme, toplu eklemede çakışmanın yarım kayıt
+bırakmadan reddedilmesi ve tarihsel oda etiketlerinin korunması.
 
 ## 2. Gerçek veritabanı kontrolü
 
@@ -64,7 +64,8 @@ mevcut veriler silinmemeli. Uygulamayı kapatıp açınca kayıtlar kalmalı.
 1. Ana sayfa ve müsaitlik sayfası girişsiz açılsın. Dar mobil ekranda alanlar okunabilsin.
 2. Süper admin → personel girişi → resepsiyon, temizlik, teknik servis hesapları oluşturun.
 3. Admin ile oda tipi oluşturun (8'den çok veya HTTPS olmayan görsel adresi reddedilmeli).
-4. Fiziksel oda ekleyin; aynı numara ikinci kez eklenmemeli.
+4. Fiziksel oda ekleyin; aynı numara ikinci kez eklenmemeli. Toplu ekleme formuyla 201'den başlayan
+   3 oda oluşturun; 201, 202 ve 203 aynı kat ve tipte görünmeli. İçlerinden biri mevcutsa hiçbirinin eklenmediğini doğrulayın.
 5. Müşteri kaydı oluşturun. Personel girişinden müşteri hesabına giriş reddedilmeli ve tersi de geçerli.
 6. Giriş bugün, çıkış yarın olacak şekilde talep açın; fiyat backend'deki oda tipi fiyatından gelsin.
 7. Başka müşteri aynı oda için pending talep açabilir; bu talepler henüz kesinleşmiş değildir.

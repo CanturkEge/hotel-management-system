@@ -1,9 +1,106 @@
-@model List<RoomDto>
-@{ViewData["Title"]="Fiziksel odalar";}
-<div class="section-heading"><div><p class="eyebrow">ODA YÖNETİMİ</p><h1>Fiziksel odalar</h1></div><a class="button" asp-action="EditRoom">Oda ekle</a></div>
-<div class="table-scroll"><table><thead><tr><th>Oda</th><th>Tip / kat</th><th>Durum</th><th>Satış</th><th>İşlemler</th></tr></thead><tbody>
-@foreach(var r in Model)
-{<tr><td><strong>@r.Number</strong></td><td>@r.TypeName<small>Kat @r.Floor</small></td><td><span class="badge">@Ui.Status(r.Status)</span></td><td>@(r.IsActive?"Açık":"Kapalı")</td><td class="actions"><a asp-action="EditRoom" asp-route-id="@r.Id">Düzenle</a>
-@if(r.IsActive){<form asp-action="ArchiveRoom" method="post" data-confirm="Oda satıştan kaldırılsın mı? Geçmiş kayıtlar silinmez."><input type="hidden" name="id" value="@r.Id" /><button class="danger" type="submit">Kaldır</button></form>}
-</td></tr>}
-</tbody></table></div><p class="muted">Kaldırmak geçmişi silmez. Oda durumları giriş, çıkış ve görev tamamlamayla değişir.</p>
+@model RoomManagementPage
+@{
+    ViewData["Title"]="Fiziksel odalar";
+    var active=Model.Rooms.Count(x=>x.IsActive);
+    var available=Model.Rooms.Count(x=>x.IsActive && x.Status==RoomStatus.Available);
+    var occupied=Model.Rooms.Count(x=>x.IsActive && x.Status==RoomStatus.Occupied);
+    var attention=Model.Rooms.Count(x=>x.IsActive && x.Status is RoomStatus.Cleaning or RoomStatus.Maintenance or RoomStatus.OutOfService);
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">ODA YÖNETİMİ</p>
+        <h1>Fiziksel odalar</h1>
+        <p class="lead">Odaları tek tek uğraşmadan oluşturun, durumlarını izleyin ve satış ayarlarını yönetin.</p>
+    </div>
+    <a class="button secondary" asp-action="EditRoom">Tek oda ekle</a>
+</div>
+
+<div class="summary-grid compact-summary" aria-label="Oda özeti">
+    <article><span>Toplam</span><strong>@Model.Rooms.Count</strong></article>
+    <article><span>Satışta</span><strong>@active</strong></article>
+    <article><span>Hazır</span><strong>@available</strong></article>
+    <article><span>Dolu</span><strong>@occupied</strong></article>
+    <article><span>İşlem gerekli</span><strong>@attention</strong></article>
+</div>
+
+<div class="management-layout">
+    <aside class="panel bulk-room-panel" id="toplu-oda-ekle">
+        <div class="panel-heading">
+            <span class="step-number">+</span>
+            <div><p class="eyebrow">HIZLI İŞLEM</p><h2>Toplu oda ekle</h2></div>
+        </div>
+        <p class="muted">Başlangıç numarasından itibaren ardışık odalar tek işlemde oluşturulur.</p>
+        <form asp-action="CreateRooms" method="post" class="form-stack" data-bulk-room-form>
+            <div asp-validation-summary="All" class="validation" role="alert"></div>
+            <label>Oda tipi
+                <select asp-for="Bulk.RoomTypeId" required>
+                    <option value="">Oda tipi seçin</option>
+                    @foreach(var t in Model.Types){<option value="@t.Id">@t.Name · @Ui.Money(t.BasePrice)</option>}
+                </select>
+            </label>
+            <div class="form-grid three">
+                <label>İlk oda
+                    <input asp-for="Bulk.StartNumber" type="number" min="1" max="999999" required inputmode="numeric" />
+                </label>
+                <label>Adet
+                    <input asp-for="Bulk.Count" type="number" min="1" max="100" required inputmode="numeric" />
+                </label>
+                <label>Kat
+                    <input asp-for="Bulk.Floor" type="number" min="-5" max="100" required inputmode="numeric" />
+                </label>
+            </div>
+            <div class="room-preview" data-room-preview aria-live="polite"></div>
+            <button type="submit" disabled="@(Model.Types.Count==0)">Odaları oluştur</button>
+            @if(Model.Types.Count==0){<small>Önce aktif bir oda tipi oluşturmalısınız.</small>}
+            else{<small>Çakışan bir oda numarası varsa işlem durur; yarım kayıt oluşmaz.</small>}
+        </form>
+    </aside>
+
+    <section class="room-list-section">
+        <div class="list-toolbar">
+            <label class="search-field"><span class="sr-only">Odalarda ara</span><input type="search" data-room-search placeholder="Oda no, tip, kat veya durum ara" /></label>
+            <label class="select-field"><span class="sr-only">Oda durumunu filtrele</span>
+                <select data-room-status>
+                    <option value="all">Tüm odalar</option>
+                    <option value="active">Yalnızca satışta</option>
+                    <option value="Available">Hazır</option>
+                    <option value="Occupied">Dolu</option>
+                    <option value="Cleaning">Temizlikte</option>
+                    <option value="Maintenance">Bakımda</option>
+                    <option value="OutOfService">Hizmet dışı</option>
+                    <option value="inactive">Satıştan kaldırılmış</option>
+                </select>
+            </label>
+            <span class="result-count" data-room-result-count>@Model.Rooms.Count oda</span>
+        </div>
+
+        <div class="table-scroll room-table-wrap">
+            <table id="room-table">
+                <thead><tr><th>Oda</th><th>Tip / kat</th><th>Durum</th><th>Satış</th><th class="align-right">İşlemler</th></tr></thead>
+                <tbody>
+                @foreach(var r in Model.Rooms)
+                {
+                    <tr data-room-row data-status="@r.Status" data-active="@r.IsActive.ToString().ToLowerInvariant()">
+                        <td><span class="room-number">@r.Number</span></td>
+                        <td><strong>@r.TypeName</strong><small>Kat @r.Floor · @r.Capacity kişi</small></td>
+                        <td><span class="badge status-@r.Status.ToString().ToLowerInvariant()">@Ui.Status(r.Status)</span></td>
+                        <td><span class="availability-dot @(r.IsActive?"is-active":"is-inactive")"></span>@(r.IsActive?"Satışta":"Kapalı")</td>
+                        <td><div class="actions align-right"><a class="text-action" asp-action="EditRoom" asp-route-id="@r.Id">Düzenle</a>
+                        @if(r.IsActive)
+                        {
+                            <form asp-action="ArchiveRoom" method="post" data-confirm="Oda satıştan kaldırılsın mı? Geçmiş kayıtlar silinmez.">
+                                <input type="hidden" name="id" value="@r.Id" /><button class="danger small" type="submit">Kaldır</button>
+                            </form>
+                        }
+                        </div></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <p class="empty table-empty" data-room-empty hidden>Bu filtreye uyan oda bulunamadı.</p>
+        </div>
+        @if(Model.Rooms.Count==0){<p class="empty">Henüz fiziksel oda yok. Soldaki hızlı formdan ilk odaları oluşturabilirsiniz.</p>}
+        <p class="muted helper-text">Satıştan kaldırmak geçmiş rezervasyonları silmez. Oda durumları giriş, çıkış ve görev tamamlamayla otomatik değişir.</p>
+    </section>
+</div>

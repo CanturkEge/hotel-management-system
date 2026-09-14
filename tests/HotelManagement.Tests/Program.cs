@@ -44,6 +44,8 @@ await Test("Wrong worker role cannot complete repair",async ()=> {var f=new Fixt
 await Test("Cleaning completion does not override open repair",async ()=> {var f=new Fixture();await f.Service.ReportJobAsync(new(){RoomId=f.Room.Id,Description="Oda kirli",Kind=JobKind.Cleaning});await f.Service.ReportJobAsync(new(){RoomId=f.Room.Id,Description="Klima bozuk",Kind=JobKind.Maintenance});var job=(await f.Jobs.ListAsync())[0];await f.Service.CompleteJobAsync(job.Id,JobKind.Cleaning,"cleaner");Assert(f.Room.Status==RoomStatus.Maintenance);});
 await Test("Completing all jobs releases room",async ()=> {var f=new Fixture();await f.Service.ReportJobAsync(new(){RoomId=f.Room.Id,Description="Oda kirli",Kind=JobKind.Cleaning});var job=(await f.Jobs.ListAsync())[0];await f.Service.CompleteJobAsync(job.Id,JobKind.Cleaning,"cleaner");Assert(f.Room.Status==RoomStatus.Available);});
 await Test("Room with active request cannot be archived",async ()=> {var f=new Fixture();await f.Service.BookAsync(f.Customer,f.Input());await Reject(()=>f.Service.ArchiveRoomAsync(f.Room.Id));});
+await Test("Bulk room creation adds sequential rooms",async ()=> {var f=new Fixture();var count=await f.Service.CreateRoomsAsync(new(){RoomTypeId=f.Type.Id,StartNumber=201,Count=3,Floor=2});Assert(count==3);var added=(await f.Rooms.ListAsync()).Where(x=>x.Number!="101").OrderBy(x=>x.Number).ToList();Assert(added.Count==3 && added[0].Number=="201" && added[2].Number=="203" && added.All(x=>x.Floor==2));});
+await Test("Bulk room creation rejects duplicate batch without partial add",async ()=> {var f=new Fixture();await Reject(()=>f.Service.CreateRoomsAsync(new(){RoomTypeId=f.Type.Id,StartNumber=100,Count=3,Floor=1}));Assert((await f.Rooms.ListAsync()).Count==1);});
 await Test("History keeps original room label and type",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());var b=(await f.Bookings.GetAsync(id))!;f.Room.Number="999";f.Type.Name="Changed";Assert(b.ToDto(false).RoomNumber=="101" && b.ToDto(false).TypeName=="Deluxe");});
 Console.WriteLine($"{passed} business-rule tests passed. PostgreSQL/Identity/browser integration is a separate manual checklist.");
 
@@ -73,13 +75,14 @@ sealed class Fixture
     public readonly MemoryRepository<Reservation> Bookings=new();
     public readonly MemoryRepository<Review> Reviews=new();
     public readonly MemoryRepository<RoomJob> Jobs=new();
+    public readonly MemoryRepository<Room> Rooms=new();
     public HotelService Service {get;}
     public Fixture()
     {
         Room=new(){Number="101",RoomTypeId=Type.Id,RoomType=Type};
         var types=new MemoryRepository<RoomType>();types.Add(Type);
-        var rooms=new MemoryRepository<Room>();rooms.Add(Room);
-        Service=new(types,rooms,Bookings,Reviews,Jobs,new MemoryUnit(),new FixedClock());
+        Rooms.Add(Room);
+        Service=new(types,Rooms,Bookings,Reviews,Jobs,new MemoryUnit(),new FixedClock());
     }
     public BookingInput Input()=>new(){RoomId=Room.Id,CheckInDate=new(2026,9,9),CheckOutDate=new(2026,9,11),GuestCount=2,GuestName="Test User",GuestPhone="05000000000"};
 }

@@ -25,6 +25,14 @@ public class RoomInput
     public bool IsActive { get; set; } = true;
 }
 
+public class BulkRoomInput
+{
+    public Guid RoomTypeId { get; set; }
+    [Range(1, 999999)] public int StartNumber { get; set; } = 101;
+    [Range(1, 100)] public int Count { get; set; } = 10;
+    [Range(-5, 100)] public int Floor { get; set; } = 1;
+}
+
 public class BookingInput
 {
     public Guid RoomId { get; set; }

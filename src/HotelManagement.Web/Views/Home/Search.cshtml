@@ -1,6 +1,6 @@
 @model SearchPage
 @{ViewData["Title"]="Müsaitlik";}
-<p class="eyebrow">REZERVASYON</p><h1>Ne zaman gelmek istersiniz?</h1>
+<div class="page-heading"><div><p class="eyebrow">REZERVASYON</p><h1>Ne zaman gelmek istersiniz?</h1><p class="lead">Tarihlerinizi seçin; müsait odaları toplam fiyatlarıyla birlikte karşılaştırın.</p></div></div>
 <div asp-validation-summary="All" class="validation" role="alert"></div>
 <form asp-action="Search" method="get" class="search-bar">
     <label>Giriş<input type="date" name="start" value="@Model.Start.ToString("yyyy-MM-dd")" required /></label>
@@ -11,10 +11,10 @@
 <p class="muted">1–30 gecelik konaklamalar. Çıkış günü, sonraki misafirin giriş günü olabilir. Temizlik ve bakımda olan odalar listelenmez.</p>
 @if(Model.Searched && ViewData.ModelState.IsValid)
 {
-    <h2>@Model.Rooms.Count uygun oda</h2>
+    <div class="section-heading search-results-heading"><div><p class="eyebrow">ARAMA SONUCU</p><h2>@Model.Rooms.Count uygun oda</h2></div><span class="badge">@(Model.End.DayNumber-Model.Start.DayNumber) gece · @Model.Guests misafir</span></div>
     @if(Model.Rooms.Count==0){<p class="empty">Bu tarihlerde uygun oda bulunamadı. Tarih veya misafir sayısını değiştirebilirsiniz.</p>}
     <div class="cards">
     @foreach(var r in Model.Rooms)
-    {<article class="panel"><p class="eyebrow">ODA @r.Number · KAT @r.Floor</p><h3>@r.TypeName</h3><p>@r.Capacity kişiye kadar</p><p><strong>@Ui.Money(r.Price * (Model.End.DayNumber-Model.Start.DayNumber))</strong> / toplam</p><a class="button" asp-controller="Bookings" asp-action="Create" asp-route-roomId="@r.Id" asp-route-start="@Model.Start.ToString("yyyy-MM-dd")" asp-route-end="@Model.End.ToString("yyyy-MM-dd")" asp-route-guests="@Model.Guests">Bu odayı seç</a></article>}
+    {<article class="panel search-result-card"><div><p class="eyebrow">ODA @r.Number · KAT @r.Floor</p><h3>@r.TypeName</h3><p class="muted">@r.Capacity kişiye kadar · @Ui.Money(r.Price) / gece</p></div><div class="result-price"><small>Toplam</small><strong>@Ui.Money(r.Price * (Model.End.DayNumber-Model.Start.DayNumber))</strong></div><a class="button" asp-controller="Bookings" asp-action="Create" asp-route-roomId="@r.Id" asp-route-start="@Model.Start.ToString("yyyy-MM-dd")" asp-route-end="@Model.End.ToString("yyyy-MM-dd")" asp-route-guests="@Model.Guests">Bu odayı seç</a></article>}
     </div>
 }

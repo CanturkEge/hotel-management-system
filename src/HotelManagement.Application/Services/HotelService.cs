@@ -65,6 +65,24 @@ public sealed class HotelService(
         if(input.Id==Guid.Empty) rooms.Add(room);
         return true;
     });
+
+    public Task<int> CreateRoomsAsync(BulkRoomInput input) => Write(async () =>
+    {
+        Validate(input);
+        var type=await types.GetAsync(input.RoomTypeId) ?? throw new AppException("Oda tipi bulunamadı.");
+        if(!type.IsActive) throw new AppException("Pasif oda tipi için oda oluşturulamaz.");
+
+        var lastNumber=(long)input.StartNumber+input.Count-1;
+        if(lastNumber>999999) throw new AppException("Son oda numarası 999999 değerini geçemez.");
+        var numbers=Enumerable.Range(input.StartNumber,input.Count).Select(x=>x.ToString()).ToArray();
+        var duplicates=(await rooms.ListAsync(x=>numbers.Contains(x.Number))).Select(x=>x.Number).OrderBy(x=>x).ToArray();
+        if(duplicates.Length>0)
+            throw new AppException($"Şu oda numaraları zaten var: {string.Join(", ",duplicates)}. Hiçbir oda eklenmedi.");
+
+        foreach(var number in numbers)
+            rooms.Add(new Room {Number=number,Floor=input.Floor,RoomTypeId=input.RoomTypeId});
+        return numbers.Length;
+    });
     private Task<bool> HasFutureAsync(Guid id) => reservations.AnyAsync(r=>r.RoomId==id &&
         (r.Status==ReservationStatus.CheckedIn || ((r.Status==ReservationStatus.Pending || r.Status==ReservationStatus.Confirmed) && r.CheckOutDate>clock.Today)));
 

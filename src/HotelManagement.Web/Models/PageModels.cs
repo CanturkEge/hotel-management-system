@@ -24,6 +24,12 @@ public class RoomEditPage
     public RoomInput Input {get;set;}=new();
     [BindNever,ValidateNever] public List<RoomTypeDto> Types {get;set;}=[];
 }
+public class RoomManagementPage
+{
+    public BulkRoomInput Bulk {get;set;}=new();
+    [BindNever,ValidateNever] public List<RoomDto> Rooms {get;set;}=[];
+    [BindNever,ValidateNever] public List<RoomTypeDto> Types {get;set;}=[];
+}
 public class JobPage
 {
     public JobInput Input {get;set;}=new();

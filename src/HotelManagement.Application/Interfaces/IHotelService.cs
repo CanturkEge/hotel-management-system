@@ -8,6 +8,7 @@ public interface IHotelService
     Task SaveTypeAsync(RoomTypeInput input);
     Task<List<RoomDto>> RoomsAsync(bool includeInactive = false);
     Task SaveRoomAsync(RoomInput input);
+    Task<int> CreateRoomsAsync(BulkRoomInput input);
     Task ArchiveRoomAsync(Guid id);
     Task<List<RoomDto>> AvailableAsync(DateOnly start, DateOnly end, int guests);
     Task<List<BusyPeriod>> BusyAsync(Guid roomId);

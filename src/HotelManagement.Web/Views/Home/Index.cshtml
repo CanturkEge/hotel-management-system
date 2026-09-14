@@ -1,17 +1,18 @@
 @model CatalogPage
 @{ViewData["Title"]="Kendinize yer açın";}
 <section class="hero">
-    <div class="hero-copy"><p class="eyebrow">MERIDIAN HOTEL</p><h1>Biraz yavaşlayın.<br />Kendinize yer açın.</h1><p>Odanızı keşfedin, size uygun tarihleri seçin. Konaklama planınız tek bir yerde.</p><a class="button" asp-action="Search">Müsait odaları keşfet</a></div>
-    <figure><img src="~/images/room-demo.jpg" alt="Aydınlık bir otel odasının temsili görseli" /><figcaption>Temsili görsel · Eğitim projesi</figcaption></figure>
+    <div class="hero-copy"><p class="eyebrow">MERIDIAN HOTEL</p><h1>Biraz yavaşlayın.<br />Kendinize yer açın.</h1><p>Odanızı keşfedin, size uygun tarihleri seçin. Konaklama planınız tek bir yerde.</p><div class="hero-actions"><a class="button" asp-action="Search">Müsait odaları keşfet</a><a class="text-action" href="#odalar">Odaları incele ↓</a></div></div>
+    <figure class="hero-media"><img src="~/images/room-demo.jpg" alt="Aydınlık bir otel odasının temsili görseli" /><div class="hero-note"><strong>Sade rezervasyon</strong><span>Tarih seçin, odayı görün, talebinizi gönderin.</span></div><figcaption>Temsili görsel · Eğitim projesi</figcaption></figure>
 </section>
-<section><div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h2>Size ait bir alan</h2></div><a asp-action="Search">Tarih seç ve karşılaştır</a></div>
+<div class="service-strip" aria-label="Rezervasyon özellikleri"><span><strong>01</strong> Anlık müsaitlik</span><span><strong>02</strong> Şeffaf toplam fiyat</span><span><strong>03</strong> Tek yerden konaklama takibi</span></div>
+<section id="odalar"><div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h2>Size ait bir alan</h2></div><a class="text-action" asp-action="Search">Tarih seç ve karşılaştır →</a></div>
 <div class="cards">
 @foreach(var t in Model.Types)
 {
     var photo=Ui.Images(t.ImageUrls).FirstOrDefault();
     <article class="room-card">
         <img src="@(photo ?? Url.Content("~/images/room-demo.jpg"))" alt="@(photo==null ? "Temsili oda görseli" : t.Name)" loading="lazy" />
-        <div class="card-body"><p class="eyebrow">@t.SizeInSquareMeters m² · @t.Capacity misafir · @t.BedCount yatak</p><h3>@t.Name</h3><p class="clamp">@t.Description</p><div class="price-row"><span><strong>@Ui.Money(t.BasePrice)</strong><small> / gece</small></span><a asp-action="Details" asp-route-id="@t.Id">İncele</a></div></div>
+        <div class="card-body"><p class="eyebrow">@t.SizeInSquareMeters m² · @t.Capacity misafir · @t.BedCount yatak</p><h3>@t.Name</h3><p class="clamp">@t.Description</p><div class="price-row"><span><strong>@Ui.Money(t.BasePrice)</strong><small> / gece</small></span><a class="text-action" asp-action="Details" asp-route-id="@t.Id">İncele →</a></div></div>
     </article>
 }
 </div>

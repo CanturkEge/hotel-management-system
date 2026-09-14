@@ -25,7 +25,25 @@ public class ManagementController(IHotelService hotel):Controller
             catch(AppException ex){ModelState.AddModelError("",ex.Message);}
         return View(input);
     }
-    public async Task<IActionResult> Rooms()=>View(await hotel.RoomsAsync(true));
+    public async Task<IActionResult> Rooms()=>View(await RoomPage());
+    [HttpPost] public async Task<IActionResult> CreateRooms([Bind(Prefix="Bulk")] BulkRoomInput input)
+    {
+        if(ModelState.IsValid)
+            try
+            {
+                var count=await hotel.CreateRoomsAsync(input);
+                TempData["Success"]=$"{count} oda tek seferde oluşturuldu.";
+                return RedirectToAction(nameof(Rooms));
+            }
+            catch(AppException ex){ModelState.AddModelError("",ex.Message);}
+        return View(nameof(Rooms),await RoomPage(input));
+    }
+    private async Task<RoomManagementPage> RoomPage(BulkRoomInput? input=null)=>new()
+    {
+        Bulk=input??new(),
+        Rooms=await hotel.RoomsAsync(true),
+        Types=await hotel.TypesAsync()
+    };
     [HttpGet] public async Task<IActionResult> EditRoom(Guid? id)
     {
         var page=new RoomEditPage{Types=await hotel.TypesAsync()};
