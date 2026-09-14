@@ -15,6 +15,8 @@ Gerçek giriş, yetki ve tarayıcı akışları `TESTLER.md` listesinden ayrıca
 ## Dahil
 
 - Müşteri kayıt/giriş, ayrı personel girişi, çalışan POST çıkış formu.
+- Kurumsal ana sayfa, tarih arama kutusu, Meridian Journal haberleri, hakkımızda ve iletişim sayfaları.
+- Modern müşteri alanı: rezervasyon özetleri, sıradaki konaklama ve durum zaman çizelgesi.
 - Tek başlangıç Admin ve SuperAdmin; Reception, Cleaner, Maintenance personel hesapları.
 - Süper admin tarafından personel oluşturma ve personel rol değiştirme.
 - Oda tipi: açıklama, fiyat, kapasite, yatak sayısı, alan, olanaklar, 8 adrese kadar görsel galerisi.

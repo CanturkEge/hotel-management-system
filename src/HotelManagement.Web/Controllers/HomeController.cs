@@ -9,6 +9,25 @@ namespace HotelManagement.Web.Controllers;
 public class HomeController(IHotelService hotel,IHotelClock clock) : Controller
 {
     public async Task<IActionResult> Index()=>View(new CatalogPage(await hotel.TypesAsync(),await hotel.ReviewsAsync()));
+    [HttpGet("/hakkimizda")]
+    public IActionResult About()=>View();
+    [HttpGet("/haberler")]
+    public IActionResult News()=>View(SiteContent.News);
+    [HttpGet("/haberler/{slug}")]
+    public IActionResult NewsDetail(string slug)
+    {
+        var article=SiteContent.News.FirstOrDefault(x=>x.Slug.Equals(slug,StringComparison.OrdinalIgnoreCase));
+        return article==null?NotFound():View(article);
+    }
+    [HttpGet("/iletisim")]
+    public IActionResult Contact()=>View(new ContactInput());
+    [HttpPost("/iletisim")]
+    public IActionResult Contact(ContactInput input)
+    {
+        if(!ModelState.IsValid)return View(input);
+        TempData["Success"]="Form başarıyla doğrulandı. Bu eğitim sürümünde harici e-posta servisi bağlı değildir; doğrudan e-posta veya telefon bağlantısını kullanabilirsiniz.";
+        return RedirectToAction(nameof(Contact));
+    }
     [HttpGet]
     public async Task<IActionResult> Search(DateOnly? start,DateOnly? end,int guests=2)
     {

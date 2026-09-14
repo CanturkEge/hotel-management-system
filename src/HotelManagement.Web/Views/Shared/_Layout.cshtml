@@ -15,8 +15,11 @@
     <a class="brand" asp-controller="Home" asp-action="Index">MERIDIAN<span>HOTEL & STAY</span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-navigation"><span></span><span></span><span></span><span class="sr-only">Menüyü aç</span></button>
     <nav id="main-navigation" class="site-nav" aria-label="Ana gezinme">
-        <a asp-controller="Home" asp-action="Index">Odalar</a>
+        <a asp-controller="Home" asp-action="Index">Ana sayfa</a>
+        <a asp-controller="Home" asp-action="Index" asp-fragment="odalar">Odalar</a>
         <a asp-controller="Home" asp-action="Search">Müsaitlik</a>
+        <a asp-controller="Home" asp-action="News">Haberler</a>
+        <a asp-controller="Home" asp-action="Contact">Bize ulaşın</a>
         @if(User.Identity?.IsAuthenticated==true)
         {
             if(User.IsInRole(Roles.Customer)) {<a asp-controller="Bookings" asp-action="Index">Konaklamalarım</a>}
@@ -47,6 +50,14 @@
     @if(TempData["Error"] is string error){<div class="notice error" role="alert"><span>@error</span><button type="button" class="notice-close" aria-label="Bildirimi kapat">×</button></div>}
     @RenderBody()
 </main>
-<footer><div class="footer-shell"><span>MERIDIAN · Otel yönetimi eğitim projesi</span><a asp-controller="Account" asp-action="StaffLogin">Personel girişi</a></div></footer>
+<footer class="site-footer">
+    <div class="footer-shell footer-grid">
+        <div class="footer-brand"><a class="brand footer-logo" asp-controller="Home" asp-action="Index">MERIDIAN<span>HOTEL & STAY</span></a><p>Şehrin ritminin içinde, kendinize ait sakin bir alan.</p></div>
+        <div><strong>Keşfedin</strong><a asp-controller="Home" asp-action="Index" asp-fragment="odalar">Odalar</a><a asp-controller="Home" asp-action="Search">Müsaitlik</a><a asp-controller="Home" asp-action="News">Haberler</a></div>
+        <div><strong>Meridian</strong><a asp-controller="Home" asp-action="About">Hakkımızda</a><a asp-controller="Home" asp-action="Contact">Bize ulaşın</a><a asp-controller="Account" asp-action="StaffLogin">Personel girişi</a></div>
+        <div><strong>İletişim</strong><span>Caferağa, Kadıköy · İstanbul</span><a href="tel:+902160000000">+90 216 000 00 00</a><a href="mailto:hello@meridianhotel.example">hello@meridianhotel.example</a></div>
+    </div>
+    <div class="footer-bottom"><span>© @DateTime.UtcNow.Year Meridian Hotel</span><span>Otel yönetimi eğitim projesi · Bilgiler temsilidir</span></div>
+</footer>
 </body>
 </html>

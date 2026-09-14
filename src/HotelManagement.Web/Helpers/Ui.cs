@@ -3,7 +3,11 @@ using HotelManagement.Domain.Enums;
 namespace HotelManagement.Web.Helpers;
 public static class Ui
 {
-    public static string Money(decimal price)=>price.ToString("N2",CultureInfo.GetCultureInfo("tr-TR"))+" ₺";
+    private static readonly CultureInfo Turkish=CultureInfo.GetCultureInfo("tr-TR");
+    public static string Money(decimal price)=>price.ToString("N2",Turkish)+" ₺";
+    public static string Date(DateOnly date)=>date.ToString("dd MMM yyyy",Turkish);
+    public static string LongDate(DateOnly date)=>date.ToString("dd MMMM yyyy",Turkish);
+    public static string Month(DateOnly date)=>date.ToString("MMM",Turkish).ToUpper(Turkish);
     public static string Status(ReservationStatus status)=>status switch {
         ReservationStatus.Pending=>"Onay bekliyor",ReservationStatus.Confirmed=>"Onaylandı",ReservationStatus.CheckedIn=>"Konaklıyor",
         ReservationStatus.CheckedOut=>"Tamamlandı",ReservationStatus.Cancelled=>"İptal",ReservationStatus.Rejected=>"Reddedildi",_=>"Bilinmiyor"};

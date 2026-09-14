@@ -1,0 +1,16 @@
+@model IReadOnlyList<NewsItem>
+@{ViewData["Title"]="Haberler";}
+<section class="editorial-hero">
+    <div><p class="eyebrow">MERIDIAN JOURNAL</p><h1>Şehre ve iyi bir konaklamaya dair.</h1><p class="lead">Meridian'dan yenilikler, yakın çevreden rotalar ve yolculuğunuzu güzelleştirecek küçük notlar.</p></div>
+    <span class="editorial-mark" aria-hidden="true">M</span>
+</section>
+<section class="news-grid">
+@for(var i=0;i<Model.Count;i++)
+{
+    var article=Model[i];
+    <article class="news-card">
+        <div class="news-visual news-visual-@((i%3)+1)"><span>@article.Category</span></div>
+        <div class="news-copy"><p class="eyebrow">@article.Category · @article.PublishedAt.ToString("dd.MM.yyyy")</p><h2>@article.Title</h2><p>@article.Summary</p><a class="text-action" asp-action="NewsDetail" asp-route-slug="@article.Slug">Devamını oku <span aria-hidden="true">→</span></a></div>
+    </article>
+}
+</section>

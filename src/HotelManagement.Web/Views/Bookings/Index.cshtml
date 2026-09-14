@@ -1,17 +1,69 @@
 @model List<ReservationDto>
-@{ViewData["Title"]="Konaklamalarım";}
-<div class="section-heading"><div><p class="eyebrow">MİSAFİR ALANI</p><h1>Konaklamalarım</h1></div><a class="button" asp-controller="Home" asp-action="Search">Yeni rezervasyon</a></div>
-@if(Model.Count==0){<p class="empty">Henüz rezervasyonunuz yok. Müsait odalardan birini seçerek başlayın.</p>}
-@foreach(var r in Model)
-{
-<article class="panel booking-card"><div class="section-heading"><div><span class="badge">@Ui.Status(r.Status)</span><h2>@r.TypeName · Oda @r.RoomNumber</h2><small class="code">Rezervasyon: @r.Code</small></div><strong>@Ui.Money(r.TotalPrice)</strong></div>
-<p>@r.CheckInDate.ToString("dd.MM.yyyy") — @r.CheckOutDate.ToString("dd.MM.yyyy") · @r.GuestCount misafir · @r.GuestName</p>
-@if(r.Status is ReservationStatus.Pending or ReservationStatus.Confirmed)
-{<form asp-action="Cancel" method="post" data-confirm="Rezervasyon iptal edilsin mi?"><input type="hidden" name="id" value="@r.Id" /><button class="danger" type="submit">İptal talebi</button></form>}
-@if(r.Status==ReservationStatus.CheckedOut && !r.HasReview)
-{
-<details><summary>Konaklamanı değerlendir</summary><form asp-action="Review" method="post" class="form-stack"><input type="hidden" name="ReservationId" value="@r.Id" /><label>Puan<select name="Rating"><option value="5">5 · Çok iyi</option><option value="4">4 · İyi</option><option value="3">3 · Orta</option><option value="2">2 · Kötü</option><option value="1">1 · Çok kötü</option></select></label><label>Yorum<textarea name="Comment" required minlength="5" maxlength="1500" rows="3"></textarea></label><button type="submit">Yorumu gönder</button></form></details>
+@{
+    ViewData["Title"]="Misafir alanım";
+    var today=DateOnly.FromDateTime(DateTime.Today);
+    var upcoming=Model.Where(x=>x.Status is ReservationStatus.Pending or ReservationStatus.Confirmed or ReservationStatus.CheckedIn).OrderBy(x=>x.CheckInDate).FirstOrDefault();
+    var activeCount=Model.Count(x=>x.Status is ReservationStatus.Pending or ReservationStatus.Confirmed or ReservationStatus.CheckedIn);
+    var completedCount=Model.Count(x=>x.Status==ReservationStatus.CheckedOut);
+    var reviewCount=Model.Count(x=>x.Status==ReservationStatus.CheckedOut&&!x.HasReview);
 }
-@if(r.HasReview){<p class="muted">Bu konaklama için yorumunuz alındı. Onaylanan yorumlar oda sayfasında görünür.</p>}
-</article>
+<section class="guest-hero">
+    <div><p class="eyebrow">MERIDIAN MİSAFİR ALANI</p><h1>Tekrar hoş geldiniz.</h1><p>Yaklaşan konaklamalarınız, geçmiş ziyaretleriniz ve rezervasyon ayrıntılarınız tek ekranda.</p></div>
+    <a class="button light" asp-controller="Home" asp-action="Search">Yeni rezervasyon <span aria-hidden="true">→</span></a>
+</section>
+
+<div class="guest-summary">
+    <article><small>AKTİF REZERVASYON</small><strong>@activeCount</strong><span>Bekleyen ve yaklaşan</span></article>
+    <article><small>TAMAMLANAN</small><strong>@completedCount</strong><span>Konaklama geçmişi</span></article>
+    <article><small>DEĞERLENDİRME</small><strong>@reviewCount</strong><span>Yorumunuzu bekliyor</span></article>
+    <article class="guest-summary-action"><small>HIZLI İŞLEM</small><a asp-controller="Home" asp-action="Search">Müsait oda bul →</a><a asp-controller="Home" asp-action="Contact">Yardım alın →</a></article>
+</div>
+
+@if(upcoming!=null)
+{
+    var until=upcoming.CheckInDate.DayNumber-today.DayNumber;
+    <section class="next-stay">
+        <div class="next-stay-date"><small>@Ui.Month(upcoming.CheckInDate)</small><strong>@upcoming.CheckInDate.Day.ToString("00")</strong><span>@upcoming.CheckInDate.Year</span></div>
+        <div class="next-stay-copy"><p class="eyebrow">@(upcoming.Status==ReservationStatus.CheckedIn?"ŞU ANDA KONAKLIYORSUNUZ":until>0?$"{until} GÜN SONRA":"BUGÜN")</p><h2>@upcoming.TypeName · Oda @upcoming.RoomNumber</h2><p>@upcoming.CheckInDate.ToString("dd.MM.yyyy") — @upcoming.CheckOutDate.ToString("dd.MM.yyyy") · @upcoming.GuestCount misafir</p><span class="badge">@Ui.Status(upcoming.Status)</span></div>
+        <div class="next-stay-price"><small>TOPLAM</small><strong>@Ui.Money(upcoming.TotalPrice)</strong><span>@(upcoming.CheckOutDate.DayNumber-upcoming.CheckInDate.DayNumber) gece</span></div>
+    </section>
 }
+
+<div class="section-heading guest-list-heading"><div><p class="eyebrow">REZERVASYONLAR</p><h2>Tüm konaklamalarınız.</h2></div><span class="result-count">@Model.Count kayıt</span></div>
+@if(Model.Count==0)
+{
+    <div class="empty guest-empty"><span aria-hidden="true">M</span><h2>İlk yolculuğunuz burada başlasın.</h2><p>Size uygun tarihleri seçin, odaları karşılaştırın ve talebinizi birkaç adımda gönderin.</p><a class="button" asp-controller="Home" asp-action="Search">Odaları keşfet</a></div>
+}
+<div class="booking-list">
+@foreach(var r in Model.OrderByDescending(x=>x.CheckInDate))
+{
+    var progress=r.Status switch {ReservationStatus.Pending=>1,ReservationStatus.Confirmed=>2,ReservationStatus.CheckedIn=>3,ReservationStatus.CheckedOut=>4,_=>0};
+    <article class="booking-card-v2">
+        <header><div><span class="badge">@Ui.Status(r.Status)</span><p class="booking-code">REZERVASYON · @r.Code</p><h2>@r.TypeName <span>Oda @r.RoomNumber</span></h2></div><div class="booking-total"><small>TOPLAM</small><strong>@Ui.Money(r.TotalPrice)</strong></div></header>
+        <div class="booking-facts"><div><small>GİRİŞ</small><strong>@Ui.Date(r.CheckInDate)</strong></div><div><small>ÇIKIŞ</small><strong>@Ui.Date(r.CheckOutDate)</strong></div><div><small>KONAKLAMA</small><strong>@(r.CheckOutDate.DayNumber-r.CheckInDate.DayNumber) gece · @r.GuestCount misafir</strong></div><div><small>MİSAFİR</small><strong>@r.GuestName</strong></div></div>
+        @if(progress>0)
+        {
+            <div class="booking-progress" aria-label="Rezervasyon durumu">
+                <div class="@(progress>=1?"is-done":"")"><span></span><small>Talep alındı</small></div>
+                <div class="@(progress>=2?"is-done":"")"><span></span><small>Onaylandı</small></div>
+                <div class="@(progress>=3?"is-done":"")"><span></span><small>Giriş yapıldı</small></div>
+                <div class="@(progress>=4?"is-done":"")"><span></span><small>Tamamlandı</small></div>
+            </div>
+        }
+        else
+        {
+            <p class="booking-closed">Bu rezervasyon @Ui.Status(r.Status). Yeni bir konaklama planlamak için müsaitlik ekranını kullanabilirsiniz.</p>
+        }
+        <footer class="booking-actions">
+            <div><small>İLETİŞİM</small><span>@r.GuestPhone</span></div>
+            <div class="actions">
+            @if(r.Status is ReservationStatus.Pending or ReservationStatus.Confirmed)
+            {<form asp-action="Cancel" method="post" data-confirm="Rezervasyon iptal edilsin mi?"><input type="hidden" name="id" value="@r.Id" /><button class="danger small" type="submit">Rezervasyonu iptal et</button></form>}
+            @if(r.Status==ReservationStatus.CheckedOut&&!r.HasReview)
+            {<details class="review-details"><summary class="button small secondary">Konaklamanı değerlendir</summary><form asp-action="Review" method="post" class="form-stack"><input type="hidden" name="ReservationId" value="@r.Id" /><label>Puan<select name="Rating"><option value="5">5 · Çok iyi</option><option value="4">4 · İyi</option><option value="3">3 · Orta</option><option value="2">2 · Kötü</option><option value="1">1 · Çok kötü</option></select></label><label>Yorum<textarea name="Comment" required minlength="5" maxlength="1500" rows="3"></textarea></label><button type="submit">Yorumu gönder</button></form></details>}
+            @if(r.HasReview){<span class="review-sent">✓ Yorumunuz alındı</span>}
+            </div>
+        </footer>
+    </article>
+}
+</div>

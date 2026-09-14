@@ -1,0 +1,22 @@
+@model ContactInput
+@{ViewData["Title"]="Bize ulaşın";}
+<section class="contact-hero"><div><p class="eyebrow">BİZE ULAŞIN</p><h1>Size nasıl yardımcı olabiliriz?</h1><p class="lead">Rezervasyon, özel istekler veya konaklamanızla ilgili tüm sorularınız için buradayız.</p></div></section>
+<div class="contact-layout">
+    <section class="contact-details">
+        <article><span class="contact-icon">01</span><div><small>TELEFON</small><a href="tel:+902160000000">+90 216 000 00 00</a><p>Her gün 08.00–23.00</p></div></article>
+        <article><span class="contact-icon">02</span><div><small>E-POSTA</small><a href="mailto:hello@meridianhotel.example">hello@meridianhotel.example</a><p>En geç bir iş günü içinde dönüş</p></div></article>
+        <article><span class="contact-icon">03</span><div><small>ADRES</small><strong>Caferağa, Kadıköy · İstanbul</strong><p>Konum ve iletişim bilgileri temsilidir.</p></div></article>
+        <div class="map-placeholder"><span>MERIDIAN</span><strong>Kadıköy · İstanbul</strong><small>Şehrin merkezinde, sakin bir durak.</small></div>
+    </section>
+    <section class="panel contact-form-panel">
+        <p class="eyebrow">MESAJ GÖNDERİN</p><h2>Sizi dinliyoruz.</h2>
+        <form asp-action="Contact" method="post" class="form-stack">
+            <div asp-validation-summary="ModelOnly" class="validation"></div>
+            <div class="form-grid"><label>Ad soyad<input asp-for="FullName" autocomplete="name" placeholder="Adınız Soyadınız" /><span asp-validation-for="FullName" class="error"></span></label><label>E-posta<input asp-for="Email" autocomplete="email" placeholder="ornek@email.com" /><span asp-validation-for="Email" class="error"></span></label></div>
+            <div class="form-grid"><label>Telefon <small>(isteğe bağlı)</small><input asp-for="Phone" type="tel" autocomplete="tel" placeholder="05xx xxx xx xx" /><span asp-validation-for="Phone" class="error"></span></label><label>Konu<select asp-for="Subject"><option value="">Konu seçin</option><option>Rezervasyon</option><option>Özel istek</option><option>Grup konaklaması</option><option>Geri bildirim</option><option>Diğer</option></select><span asp-validation-for="Subject" class="error"></span></label></div>
+            <label>Mesajınız<textarea asp-for="Message" rows="6" placeholder="Size nasıl yardımcı olabiliriz?"></textarea><span asp-validation-for="Message" class="error"></span></label>
+            <button type="submit">Mesajı gönder <span aria-hidden="true">→</span></button>
+            <small>Bu eğitim projesinde form gönderimi arayüz akışını gösterir; harici e-posta servisi bağlı değildir.</small>
+        </form>
+    </section>
+</div>
