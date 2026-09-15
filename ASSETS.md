@@ -18,3 +18,14 @@ Prompt:
 
 Meridian ismi bu örnekte çalışma adıdır; gerçek marka/domain müsaitlik veya tescil araştırması yapılmadı.
 Gerçek yayından önce kendi otel adınızla değiştirin. Cullinan sitesinin kodu, marka varlıkları ve fotoğrafları kullanılmadı.
+
+## Meridian oda koleksiyonu
+
+Aşağıdaki görseller bu proje için built-in image generation ile özgün olarak üretildi ve web kullanımı için WebP formatına dönüştürüldü:
+
+- `room-standard.webp`: sıcak gün ışığında sade Standard Oda
+- `room-deluxe.webp`: şehir manzaralı, gün batımı ışığında Deluxe Oda
+- `room-family-suite.webp`: ayrı ebeveyn ve çocuk uyku alanlarına sahip Aile Süiti
+- `room-executive-bosphorus.webp`: gece Boğaz manzaralı Executive Süit
+
+Ortak prompt yaklaşımı: Meridian Hotel için fotogerçekçi ve geniş açılı editoryal otel iç mekânı; her oda tipine özgü yerleşim, renk ve ışık; gerçekçi mimari; insan, yazı, logo ve filigran yok.

@@ -35,8 +35,8 @@ public sealed class HotelService(
     {
         Validate(input);
         var urls = (input.ImageUrls ?? "").Split('\n',StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (urls.Length > 8 || urls.Any(u => !Uri.TryCreate(u,UriKind.Absolute,out var uri) || uri.Scheme != "https"))
-            throw new AppException("En fazla 8 görsel; her satıra geçerli bir HTTPS adresi girin.");
+        if (urls.Length > 8 || urls.Any(u => !IsSafeImageLocation(u)))
+            throw new AppException("En fazla 8 görsel; her satıra geçerli bir HTTPS adresi veya /images/ yolu girin.");
         var item = input.Id == Guid.Empty ? new RoomType() : await types.GetAsync(input.Id) ?? throw new AppException("Oda tipi bulunamadı.");
         if (await reservations.AnyAsync(r => r.RoomTypeId == item.Id && (r.CheckOutDate > clock.Today || r.Status==ReservationStatus.CheckedIn)
             && (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Confirmed || r.Status == ReservationStatus.CheckedIn)
@@ -48,6 +48,13 @@ public sealed class HotelService(
         if (input.Id == Guid.Empty) types.Add(item);
         return true;
     });
+
+    private static bool IsSafeImageLocation(string value)
+    {
+        if (value.StartsWith("/images/",StringComparison.OrdinalIgnoreCase) && !value.Contains("..",StringComparison.Ordinal))
+            return new[] { ".jpg", ".jpeg", ".png", ".webp", ".avif" }.Contains(Path.GetExtension(value),StringComparer.OrdinalIgnoreCase);
+        return Uri.TryCreate(value,UriKind.Absolute,out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+    }
 
     public async Task<List<RoomDto>> RoomsAsync(bool includeInactive=false)
         => (await rooms.ListAsync(x=>includeInactive || (x.IsActive && x.RoomType.IsActive))).OrderBy(x=>x.Number).Select(x=>x.ToDto()).ToList();

@@ -2,7 +2,7 @@
 @{ViewData["Title"]="Kendinize yer açın";var today=DateOnly.FromDateTime(DateTime.Today);}
 <section class="hero home-hero">
     <div class="hero-copy"><p class="eyebrow">MERIDIAN HOTEL · İSTANBUL</p><h1>Şehrin içinde.<br />Telaşın dışında.</h1><p>İyi tasarlanmış odalar, sade bir rezervasyon deneyimi ve şehri kendi ritminizde yaşamanız için size ait bir alan.</p><div class="hero-actions"><a class="button" asp-action="Search">Konaklamanızı planlayın</a><a class="text-action" href="#odalar">Odaları keşfedin ↓</a></div></div>
-    <figure class="hero-media"><img src="~/images/room-demo.jpg" alt="Aydınlık ve sakin bir Meridian otel odası" /><div class="hero-note"><span>GECELİK BAŞLANGIÇ</span><strong>@(Model.Types.Count>0?Ui.Money(Model.Types.Min(x=>x.BasePrice)):"Yakında")</strong><span>Doğrudan rezervasyon · Şeffaf fiyat</span></div><figcaption>Temsili görsel · Eğitim projesi</figcaption></figure>
+    <figure class="hero-media"><img src="~/images/room-deluxe.webp" alt="Aydınlık ve sakin bir Meridian Deluxe oda" /><div class="hero-note"><span>GECELİK BAŞLANGIÇ</span><strong>@(Model.Types.Count>0?Ui.Money(Model.Types.Min(x=>x.BasePrice)):"Yakında")</strong><span>Doğrudan rezervasyon · Şeffaf fiyat</span></div><figcaption>Meridian Deluxe Oda</figcaption></figure>
 </section>
 
 <form class="home-search" asp-action="Search" method="get">
@@ -21,7 +21,7 @@
 {
     var photo=Ui.Images(t.ImageUrls).FirstOrDefault();
     <article class="room-card">
-        <div class="room-card-media"><img src="@(photo ?? Url.Content("~/images/room-demo.jpg"))" alt="@(photo==null ? "Temsili oda görseli" : t.Name)" loading="lazy" /><span>@t.SizeInSquareMeters m²</span></div>
+        <div class="room-card-media"><img src="@(photo ?? Url.Content("~/images/room-standard.webp"))" alt="@(photo==null ? "Meridian oda görseli" : t.Name)" loading="lazy" /><span>@t.SizeInSquareMeters m²</span></div>
         <div class="card-body"><p class="eyebrow">@t.Capacity MİSAFİR · @t.BedCount YATAK</p><h3>@t.Name</h3><p class="clamp">@t.Description</p><div class="price-row"><span><small>Gecelik</small><strong>@Ui.Money(t.BasePrice)</strong></span><a class="text-action" asp-action="Details" asp-route-id="@t.Id">Odayı incele →</a></div></div>
     </article>
 }

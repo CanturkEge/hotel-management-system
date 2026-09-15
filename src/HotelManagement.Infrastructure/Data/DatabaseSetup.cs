@@ -18,14 +18,31 @@ public static class DatabaseSetup
             if(!await roles.RoleExistsAsync(role)) Ensure(await roles.CreateAsync(new IdentityRole<Guid>(role)));
         await SeedUser("SuperAdmin",Roles.SuperAdmin,"Genel Yönetici");
         await SeedUser("Admin",Roles.Admin,"Oda Yöneticisi");
-        if(!await db.RoomTypes.AnyAsync())
+        var roomTypes=await db.RoomTypes.ToListAsync();
+        var createdTypes=new HashSet<Guid>();
+        foreach(var preset in DefaultRoomTypes())
         {
-            var type=new RoomType {Name="Deluxe Oda",Description="Aydınlık yaşam alanı, geniş çift kişilik yatak ve dinlenme köşesi.",
-                BasePrice=3500,Capacity=2,BedCount=1,SizeInSquareMeters=32,Amenities="Wi-Fi, Klima, Çalışma masası, Duş, Minibar"};
-            db.RoomTypes.Add(type);
-            db.Rooms.AddRange(new Room {Number="101",Floor=1,RoomTypeId=type.Id},new Room {Number="102",Floor=1,RoomTypeId=type.Id});
-            await db.SaveChangesAsync();
+            var existing=roomTypes.FirstOrDefault(x=>x.Name.Equals(preset.Name,StringComparison.OrdinalIgnoreCase));
+            if(existing!=null)
+            {
+                if(string.IsNullOrWhiteSpace(existing.ImageUrls)) existing.ImageUrls=preset.ImageUrls;
+                continue;
+            }
+            db.RoomTypes.Add(preset); roomTypes.Add(preset); createdTypes.Add(preset.Id);
         }
+        var existingRoomNumbers=(await db.Rooms.Select(x=>x.Number).ToListAsync()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var sampleRooms=new[]
+        {
+            ("101",1,"Deluxe Oda"),("102",1,"Deluxe Oda"),("201",2,"Standard Oda"),
+            ("202",2,"Standard Oda"),("301",3,"Aile Süiti"),("401",4,"Executive Boğaz Süiti")
+        };
+        foreach(var (number,floor,typeName) in sampleRooms)
+        {
+            var type=roomTypes.First(x=>x.Name.Equals(typeName,StringComparison.OrdinalIgnoreCase));
+            if(createdTypes.Contains(type.Id) && existingRoomNumbers.Add(number))
+                db.Rooms.Add(new Room {Number=number,Floor=floor,RoomTypeId=type.Id});
+        }
+        await db.SaveChangesAsync();
         // Private schema: no Data API grants. Enable RLS as defense in depth.
         // Runtime connects through the configured database owner; authorization is enforced by C#.
         await db.Database.ExecuteSqlRawAsync("""
@@ -55,4 +72,20 @@ public static class DatabaseSetup
     {
         if(!result.Succeeded) throw new InvalidOperationException(string.Join(" ",result.Errors.Select(x=>x.Description)));
     }
+
+    private static RoomType[] DefaultRoomTypes()=>
+    [
+        new() {Name="Standard Oda",Description="Şehir molaları ve iş seyahatleri için sade, ferah ve işlevsel bir oda.",
+            BasePrice=2750,Capacity=2,BedCount=1,SizeInSquareMeters=24,Amenities="Wi-Fi, Klima, Akıllı TV, Çalışma masası, Duş",
+            ImageUrls="/images/room-standard.webp"},
+        new() {Name="Deluxe Oda",Description="Aydınlık yaşam alanı, geniş çift kişilik yatak ve dinlenme köşesi.",
+            BasePrice=3500,Capacity=2,BedCount=1,SizeInSquareMeters=32,Amenities="Wi-Fi, Klima, Çalışma masası, Duş, Minibar",
+            ImageUrls="/images/room-deluxe.webp"},
+        new() {Name="Aile Süiti",Description="Ayrı uyku alanları ve geniş yaşam bölümüyle aileler için rahat bir konaklama.",
+            BasePrice=5250,Capacity=4,BedCount=3,SizeInSquareMeters=52,Amenities="Wi-Fi, Klima, Akıllı TV, Oturma alanı, Minibar, Küvet",
+            ImageUrls="/images/room-family-suite.webp"},
+        new() {Name="Executive Boğaz Süiti",Description="Panoramik manzara, ayrı oturma alanı ve seçkin detaylarla Meridian'ın en özel süiti.",
+            BasePrice=7900,Capacity=3,BedCount=1,SizeInSquareMeters=68,Amenities="Boğaz manzarası, Wi-Fi, Klima, Salon, Nespresso, Minibar, Küvet",
+            ImageUrls="/images/room-executive-bosphorus.webp"}
+    ];
 }

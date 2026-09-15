@@ -16,5 +16,6 @@ public static class Ui
     public static string Role(string role)=>role switch {"Customer"=>"Müşteri","Admin"=>"Oda yöneticisi","SuperAdmin"=>"Süper admin",
         "Reception"=>"Resepsiyon","Cleaner"=>"Temizlik görevlisi","Maintenance"=>"Teknik servis",_=>role};
     public static string[] Images(string urls)=>urls.Split('\n',StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries)
-        .Where(u=>Uri.TryCreate(u,UriKind.Absolute,out var uri)&&uri.Scheme=="https").ToArray();
+        .Where(u=>(Uri.TryCreate(u,UriKind.Absolute,out var uri)&&uri.Scheme=="https") ||
+            (u.StartsWith("/images/",StringComparison.OrdinalIgnoreCase)&&!u.Contains("..",StringComparison.Ordinal))).ToArray();
 }

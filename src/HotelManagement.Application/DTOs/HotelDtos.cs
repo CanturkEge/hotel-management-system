@@ -11,8 +11,8 @@ public class RoomTypeInput
     [Range(1, 20)] public int Capacity { get; set; } = 2;
     [Range(1, 20)] public int BedCount { get; set; } = 1;
     [Range(5, 1000)] public int SizeInSquareMeters { get; set; } = 25;
-    [StringLength(1000)] public string Amenities { get; set; } = "";
-    [StringLength(8000)] public string ImageUrls { get; set; } = "";
+    [StringLength(1000)] public string? Amenities { get; set; }
+    [StringLength(8000)] public string? ImageUrls { get; set; }
     public bool IsActive { get; set; } = true;
 }
 

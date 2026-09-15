@@ -99,6 +99,7 @@ section + section { margin-top: 4rem; }
 .form-stack > p { margin: .25rem 0; }
 .form-stack > button { align-self: flex-start; }
 label { display: block; color: var(--ink-soft); font-size: .91rem; font-weight: 700; }
+.optional { color: var(--muted); font-size: .78rem; font-weight: 500; }
 input:not([type=checkbox]), select, textarea { width: 100%; min-height: 47px; padding: .7rem .82rem; color: var(--ink); background: var(--surface); border: 1px solid #aebcbd; border-radius: var(--radius-sm); transition: border .15s ease, box-shadow .15s ease; }
 input:not([type=checkbox]):hover, select:hover, textarea:hover { border-color: #7f9699; }
 input:not([type=checkbox]):focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(184,135,67,.12); outline: none; }

@@ -3,7 +3,7 @@
 <a asp-action="Index">← Tüm oda tipleri</a>
 <div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h1>@Model.Type.Name</h1></div><strong>@Ui.Money(Model.Type.BasePrice) / gece</strong></div>
 <div class="gallery">
-@if(photos.Length==0){<img src="~/images/room-demo.jpg" alt="Temsili oda görseli" />}
+@if(photos.Length==0){<img src="~/images/room-standard.webp" alt="Meridian oda görseli" />}
 @foreach(var photo in photos){<img src="@photo" alt="@Model.Type.Name oda görseli" loading="lazy" />}
 </div>
 <div class="split"><section><h2>Odanız hakkında</h2><p class="prewrap">@Model.Type.Description</p><p>@Model.Type.SizeInSquareMeters m² · @Model.Type.Capacity kişi · @Model.Type.BedCount yatak</p><h3>Olanaklar</h3><p>@Model.Type.Amenities</p></section>
