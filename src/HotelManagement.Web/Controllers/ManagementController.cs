@@ -2,28 +2,38 @@ using HotelManagement.Application.Common;
 using HotelManagement.Application.DTOs;
 using HotelManagement.Application.Interfaces;
 using HotelManagement.Web.Models;
+using HotelManagement.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace HotelManagement.Web.Controllers;
 
 [Authorize(Roles=Roles.Managers)]
-public class ManagementController(IHotelService hotel):Controller
+public class ManagementController(IHotelService hotel,IContentService content):Controller
 {
     public async Task<IActionResult> Types()=>View(await hotel.TypesAsync(true));
     [HttpGet] public async Task<IActionResult> EditType(Guid? id)
     {
-        if(id==null) return View(new RoomTypeInput());
+        if(id==null) return View(new RoomTypeEditorPage());
         var t=(await hotel.TypesAsync(true)).FirstOrDefault(t=>t.Id==id);
         if(t==null)return NotFound();
-        return View(new RoomTypeInput {Id=t.Id,Name=t.Name,Description=t.Description,BasePrice=t.BasePrice,Capacity=t.Capacity,
-            BedCount=t.BedCount,SizeInSquareMeters=t.SizeInSquareMeters,Amenities=t.Amenities,ImageUrls=t.ImageUrls,IsActive=t.IsActive});
+        return View(new RoomTypeEditorPage {Input=new() {Id=t.Id,Name=t.Name,Description=t.Description,BasePrice=t.BasePrice,Capacity=t.Capacity,
+            BedCount=t.BedCount,SizeInSquareMeters=t.SizeInSquareMeters,Amenities=t.Amenities,IsActive=t.IsActive,
+            IsFeatured=t.IsFeatured,FeaturedOrder=t.FeaturedOrder},ExistingImages=t.Images.ToList()});
     }
-    [HttpPost] public async Task<IActionResult> EditType(RoomTypeInput input)
+    [HttpPost,RequestFormLimits(MultipartBodyLengthLimit=41943040)] public async Task<IActionResult> EditType(RoomTypeEditorPage page)
     {
         if(ModelState.IsValid)
-            try {await hotel.SaveTypeAsync(input);TempData["Success"]="Oda tipi kaydedildi.";return RedirectToAction(nameof(Types));}
+            try
+            {
+                var uploads=await UploadReader.ReadManyAsync(page.Images,page.Input.Name+" oda görseli");
+                var id=await hotel.SaveTypeAsync(page.Input);
+                await content.UpdateRoomImagesAsync(id,uploads,page.RemoveImageIds);
+                TempData["Success"]="Oda tipi ve görseller kaydedildi.";return RedirectToAction(nameof(Types));
+            }
             catch(AppException ex){ModelState.AddModelError("",ex.Message);}
-        return View(input);
+        if(page.Input.Id!=Guid.Empty)
+            page.ExistingImages=(await hotel.TypesAsync(true)).FirstOrDefault(x=>x.Id==page.Input.Id)?.Images.ToList()??[];
+        return View(page);
     }
     public async Task<IActionResult> Rooms()=>View(await RoomPage());
     [HttpPost] public async Task<IActionResult> CreateRooms([Bind(Prefix="Bulk")] BulkRoomInput input)

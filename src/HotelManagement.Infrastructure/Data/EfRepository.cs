@@ -15,4 +15,5 @@ public sealed class EfRepository<T>(HotelDbContext db) : IRepository<T> where T:
     }
     public Task<bool> AnyAsync(Expression<Func<T,bool>> filter) => db.Set<T>().AnyAsync(filter);
     public void Add(T entity) => db.Set<T>().Add(entity);
+    public void Remove(T entity) => db.Set<T>().Remove(entity);
 }

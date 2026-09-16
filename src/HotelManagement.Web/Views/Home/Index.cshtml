@@ -1,8 +1,8 @@
 @model CatalogPage
-@{ViewData["Title"]="Kendinize yer açın";var today=DateOnly.FromDateTime(DateTime.Today);}
+@{ViewData["Title"]="Kendinize yer açın";var today=DateOnly.FromDateTime(DateTime.Today);var home=Model.Home.Input;var hero=Model.Home.HeroImageUrl??Url.Content("~/images/room-deluxe.webp");}
 <section class="hero home-hero">
-    <div class="hero-copy"><p class="eyebrow">MERIDIAN HOTEL · İSTANBUL</p><h1>Şehrin içinde.<br />Telaşın dışında.</h1><p>İyi tasarlanmış odalar, sade bir rezervasyon deneyimi ve şehri kendi ritminizde yaşamanız için size ait bir alan.</p><div class="hero-actions"><a class="button" asp-action="Search">Konaklamanızı planlayın</a><a class="text-action" href="#odalar">Odaları keşfedin ↓</a></div></div>
-    <figure class="hero-media"><img src="~/images/room-deluxe.webp" alt="Aydınlık ve sakin bir Meridian Deluxe oda" /><div class="hero-note"><span>GECELİK BAŞLANGIÇ</span><strong>@(Model.Types.Count>0?Ui.Money(Model.Types.Min(x=>x.BasePrice)):"Yakında")</strong><span>Doğrudan rezervasyon · Şeffaf fiyat</span></div><figcaption>Meridian Deluxe Oda</figcaption></figure>
+    <div class="hero-copy"><p class="eyebrow">@home.HeroEyebrow</p><h1>@home.HeroTitle</h1><p>@home.HeroText</p><div class="hero-actions"><a class="button" asp-action="Search">Konaklamanızı planlayın</a><a class="text-action" href="#odalar">Odaları keşfedin ↓</a></div></div>
+    <figure class="hero-media"><img src="@hero" alt="@home.HeroCaption" /><div class="hero-note"><span>GECELİK BAŞLANGIÇ</span><strong>@(Model.Types.Count>0?Ui.Money(Model.Types.Min(x=>x.BasePrice)):"Yakında")</strong><span>Doğrudan rezervasyon · Şeffaf fiyat</span></div><figcaption>@home.HeroCaption</figcaption></figure>
 </section>
 
 <form class="home-search" asp-action="Search" method="get">
@@ -15,11 +15,11 @@
 
 <div class="service-strip" aria-label="Rezervasyon özellikleri"><span><strong>01</strong> Anlık müsaitlik</span><span><strong>02</strong> Şeffaf toplam fiyat</span><span><strong>03</strong> Güvenli müşteri hesabı</span></div>
 
-<section id="odalar"><div class="section-heading"><div><p class="eyebrow">ODALAR & SUİTLER</p><h2>Her yolculuk için bir alan.</h2><p class="lead">İş seyahatinden hafta sonu kaçamağına, ihtiyacınız kadar sade ve konforlu.</p></div><a class="text-action" asp-action="Search">Tarih seç ve karşılaştır →</a></div>
+<section id="odalar"><div class="section-heading"><div><p class="eyebrow">@home.RoomsEyebrow</p><h2>@home.RoomsTitle</h2><p class="lead">@home.RoomsText</p></div><a class="text-action" asp-action="Search">Tarih seç ve karşılaştır →</a></div>
 <div class="cards featured-rooms">
 @foreach(var t in Model.Types)
 {
-    var photo=Ui.Images(t.ImageUrls).FirstOrDefault();
+    var photo=Ui.Images(t).FirstOrDefault();
     <article class="room-card">
         <div class="room-card-media"><img src="@(photo ?? Url.Content("~/images/room-standard.webp"))" alt="@(photo==null ? "Meridian oda görseli" : t.Name)" loading="lazy" /><span>@t.SizeInSquareMeters m²</span></div>
         <div class="card-body"><p class="eyebrow">@t.Capacity MİSAFİR · @t.BedCount YATAK</p><h3>@t.Name</h3><p class="clamp">@t.Description</p><div class="price-row"><span><small>Gecelik</small><strong>@Ui.Money(t.BasePrice)</strong></span><a class="text-action" asp-action="Details" asp-route-id="@t.Id">Odayı incele →</a></div></div>
@@ -30,11 +30,11 @@
 </section>
 
 <section class="experience-section">
-    <div class="experience-intro"><p class="eyebrow">MERIDIAN DENEYİMİ</p><h2>Odanızdan daha fazlası.</h2><p>Şehrin enerjisine yakın, kalabalığın gürültüsünden uzakta. Günün her anı için düşünülmüş küçük detaylar.</p><a class="text-action" asp-action="About">Meridian'ı tanıyın →</a></div>
+    <div class="experience-intro"><p class="eyebrow">@home.ExperienceEyebrow</p><h2>@home.ExperienceTitle</h2><p>@home.ExperienceText</p><a class="text-action" asp-action="About">Meridian'ı tanıyın →</a></div>
     <div class="experience-grid">
-        <article><span>01</span><div><small>GÜNE BAŞLANGIÇ</small><h3>Yerel kahvaltı</h3><p>Mevsim ürünleri ve mutfağımızdan sıcak tabaklarla telaşsız sabahlar.</p></div></article>
-        <article><span>02</span><div><small>ŞEHRİ KEŞFEDİN</small><h3>Mahalle rotaları</h3><p>Ekibimizin seçtiği yürüyüş, lezzet ve kültür durakları.</p></div></article>
-        <article><span>03</span><div><small>HER AN YANINIZDA</small><h3>Dijital misafir alanı</h3><p>Rezervasyonunuzu, durumunu ve geçmiş konaklamalarınızı tek yerde görün.</p></div></article>
+        <article><span>01</span><div><h3>@home.ExperienceOneTitle</h3><p>@home.ExperienceOneText</p></div></article>
+        <article><span>02</span><div><h3>@home.ExperienceTwoTitle</h3><p>@home.ExperienceTwoText</p></div></article>
+        <article><span>03</span><div><h3>@home.ExperienceThreeTitle</h3><p>@home.ExperienceThreeText</p></div></article>
     </div>
 </section>
 
@@ -45,12 +45,12 @@
 </div></section>
 }
 
-<section class="home-news"><div class="section-heading"><div><p class="eyebrow">MERIDIAN JOURNAL</p><h2>Şehirden notlar.</h2></div><a class="text-action" asp-action="News">Tüm haberler →</a></div><div class="news-grid compact-news">
-@for(var i=0;i<SiteContent.News.Count;i++)
+<section class="home-news"><div class="section-heading"><div><p class="eyebrow">@home.NewsEyebrow</p><h2>@home.NewsTitle</h2></div><a class="text-action" asp-action="News">Tüm haberler →</a></div><div class="news-grid compact-news">
+@for(var i=0;i<Model.News.Count;i++)
 {
-    var article=SiteContent.News[i];
-    <article class="news-card"><div class="news-visual news-visual-@((i%3)+1)"><span>@article.Category</span></div><div class="news-copy"><p class="eyebrow">@article.PublishedAt.ToString("dd.MM.yyyy")</p><h3>@article.Title</h3><p>@article.Summary</p><a class="text-action" asp-action="NewsDetail" asp-route-slug="@article.Slug">Oku →</a></div></article>
+    var article=Model.News[i];
+    <article class="news-card">@if(article.CoverImageUrl!=null){<img class="news-card-image" src="@article.CoverImageUrl" alt="@article.Title" loading="lazy" />}else{<div class="news-visual news-visual-@((i%3)+1)"><span>@article.Category</span></div>}<div class="news-copy"><p class="eyebrow">@article.PublishedAt.ToString("dd.MM.yyyy")</p><h3>@article.Title</h3><p>@article.Summary</p><a class="text-action" asp-action="NewsDetail" asp-route-slug="@article.Slug">Oku →</a></div></article>
 }
 </div></section>
 
-<section class="contact-banner"><div><p class="eyebrow">MİSAFİR İLİŞKİLERİ</p><h2>Konaklamanızı birlikte planlayalım.</h2><p>Özel bir isteğiniz veya aklınıza takılan bir şey varsa ekibimiz burada.</p></div><div class="hero-actions"><a class="button light" asp-action="Contact">Bize ulaşın</a><a class="text-action light-link" href="tel:+902160000000">+90 216 000 00 00</a></div></section>
+<section class="contact-banner"><div><p class="eyebrow">@home.ContactEyebrow</p><h2>@home.ContactTitle</h2><p>@home.ContactText</p></div><div class="hero-actions"><a class="button light" asp-action="Contact">Bize ulaşın</a><a class="text-action light-link" href="tel:@home.ContactPhone">@home.ContactPhone</a></div></section>

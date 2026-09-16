@@ -1,5 +1,5 @@
 @model DetailPage
-@{ViewData["Title"]=Model.Type.Name;var photos=Ui.Images(Model.Type.ImageUrls);}
+@{ViewData["Title"]=Model.Type.Name;var photos=Ui.Images(Model.Type);}
 <a asp-action="Index">← Tüm oda tipleri</a>
 <div class="section-heading"><div><p class="eyebrow">KONAKLAMA</p><h1>@Model.Type.Name</h1></div><strong>@Ui.Money(Model.Type.BasePrice) / gece</strong></div>
 <div class="gallery">

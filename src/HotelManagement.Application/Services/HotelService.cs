@@ -31,12 +31,9 @@ public sealed class HotelService(
     public async Task<List<RoomTypeDto>> TypesAsync(bool includeInactive = false)
         => (await types.ListAsync(x => includeInactive || x.IsActive)).OrderBy(x=>x.BasePrice).Select(x=>x.ToDto()).ToList();
 
-    public Task SaveTypeAsync(RoomTypeInput input) => Write(async () =>
+    public Task<Guid> SaveTypeAsync(RoomTypeInput input) => Write(async () =>
     {
         Validate(input);
-        var urls = (input.ImageUrls ?? "").Split('\n',StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (urls.Length > 8 || urls.Any(u => !IsSafeImageLocation(u)))
-            throw new AppException("En fazla 8 görsel; her satıra geçerli bir HTTPS adresi veya /images/ yolu girin.");
         var item = input.Id == Guid.Empty ? new RoomType() : await types.GetAsync(input.Id) ?? throw new AppException("Oda tipi bulunamadı.");
         if (await reservations.AnyAsync(r => r.RoomTypeId == item.Id && (r.CheckOutDate > clock.Today || r.Status==ReservationStatus.CheckedIn)
             && (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Confirmed || r.Status == ReservationStatus.CheckedIn)
@@ -44,17 +41,11 @@ public sealed class HotelService(
             throw new AppException("Aktif rezervasyon var; oda tipini kapatamaz veya kapasiteyi bu kadar düşüremezsiniz.");
         item.Name=input.Name.Trim(); item.Description=input.Description.Trim(); item.BasePrice=input.BasePrice;
         item.Capacity=input.Capacity; item.BedCount=input.BedCount; item.SizeInSquareMeters=input.SizeInSquareMeters;
-        item.Amenities=(input.Amenities ?? "").Trim(); item.ImageUrls=string.Join('\n',urls); item.IsActive=input.IsActive;
+        item.Amenities=(input.Amenities ?? "").Trim(); item.IsActive=input.IsActive;
+        item.IsFeatured=input.IsFeatured; item.FeaturedOrder=input.FeaturedOrder;
         if (input.Id == Guid.Empty) types.Add(item);
-        return true;
+        return item.Id;
     });
-
-    private static bool IsSafeImageLocation(string value)
-    {
-        if (value.StartsWith("/images/",StringComparison.OrdinalIgnoreCase) && !value.Contains("..",StringComparison.Ordinal))
-            return new[] { ".jpg", ".jpeg", ".png", ".webp", ".avif" }.Contains(Path.GetExtension(value),StringComparer.OrdinalIgnoreCase);
-        return Uri.TryCreate(value,UriKind.Absolute,out var uri) && uri.Scheme == Uri.UriSchemeHttps;
-    }
 
     public async Task<List<RoomDto>> RoomsAsync(bool includeInactive=false)
         => (await rooms.ListAsync(x=>includeInactive || (x.IsActive && x.RoomType.IsActive))).OrderBy(x=>x.Number).Select(x=>x.ToDto()).ToList();

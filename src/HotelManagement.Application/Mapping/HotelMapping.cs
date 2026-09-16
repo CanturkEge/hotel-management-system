@@ -4,7 +4,9 @@ namespace HotelManagement.Application.Mapping;
 
 public static class HotelMapping
 {
-    public static RoomTypeDto ToDto(this RoomType x) => new(x.Id,x.Name,x.Description,x.BasePrice,x.Capacity,x.BedCount,x.SizeInSquareMeters,x.Amenities,x.ImageUrls,x.IsActive);
+    public static RoomTypeDto ToDto(this RoomType x) => new(x.Id,x.Name,x.Description,x.BasePrice,x.Capacity,x.BedCount,x.SizeInSquareMeters,x.Amenities,x.ImageUrls,x.IsActive,
+        x.IsFeatured,x.FeaturedOrder,x.Images.OrderBy(i=>i.SortOrder).ThenBy(i=>i.CreatedAtUtc)
+            .Select(i=>new RoomImageDto(i.Id,$"/media/{i.MediaAssetId}",i.AltText,i.SortOrder)).ToList());
     public static RoomDto ToDto(this Room x) => new(x.Id,x.Number,x.Floor,x.RoomTypeId,x.RoomType.Name,x.RoomType.BasePrice,x.RoomType.Capacity,x.Status,x.IsActive);
     public static ReservationDto ToDto(this Reservation x, bool reviewed) => new(x.Id,x.Code,x.CustomerId,x.RoomNumber,x.RoomTypeName,x.CheckInDate,x.CheckOutDate,x.GuestCount,x.GuestName,x.GuestPhone,x.TotalPrice,x.Status,reviewed);
     public static ReviewDto ToDto(this Review x) => new(x.Id,x.Reservation.RoomTypeId,x.Reservation.RoomTypeName,x.Rating,x.Comment,x.IsApproved,x.CreatedAtUtc);

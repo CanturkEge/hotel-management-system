@@ -8,6 +8,7 @@ public interface IRepository<T> where T : BaseEntity
     Task<List<T>> ListAsync(Expression<Func<T, bool>>? filter = null);
     Task<bool> AnyAsync(Expression<Func<T, bool>> filter);
     void Add(T entity);
+    void Remove(T entity);
 }
 
 public interface IUnitOfWork

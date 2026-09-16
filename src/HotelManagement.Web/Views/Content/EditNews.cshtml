@@ -1,0 +1,13 @@
+@model NewsEditorPage
+@{ViewData["Title"]=Model.Input.Id==Guid.Empty?"Haber ekle":"Haberi düzenle";}
+<div class="section-heading"><div><p class="eyebrow">MERIDIAN JOURNAL</p><h1>@ViewData["Title"]</h1></div></div>
+<form asp-action="EditNews" method="post" enctype="multipart/form-data" class="panel form-stack">
+<div asp-validation-summary="All" class="validation" role="alert"></div><input asp-for="Input.Id" type="hidden" />
+@if(Model.CurrentCoverImageUrl!=null){<img class="editor-cover" src="@Model.CurrentCoverImageUrl" alt="Mevcut haber kapak görseli" /><label class="check"><input asp-for="RemoveCoverImage" /> Mevcut kapak görselini kaldır</label>}
+<label>Kapak görseli<input asp-for="CoverImage" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /></label><small>JPEG, PNG, WebP veya AVIF · en fazla 5 MB.</small>
+<div class="form-grid"><label>Kategori<input asp-for="Input.Category" maxlength="80" required /></label><label>Yayın tarihi<input asp-for="Input.PublishedAt" type="date" required /></label><label>Okuma süresi (dk)<input asp-for="Input.ReadingMinutes" type="number" min="1" max="60" required /></label><label>Sıra<input asp-for="Input.SortOrder" type="number" min="0" max="999" /></label></div>
+<label>Başlık<input asp-for="Input.Title" maxlength="180" required /></label><label>Sayfa adresi<input asp-for="Input.Slug" maxlength="120" placeholder="ornek-haber-basligi" required /></label><small>Türkçe karakterler ve boşluklar kaydederken güvenli bağlantı biçimine çevrilir.</small>
+<label>Kısa özet<textarea asp-for="Input.Summary" rows="3" maxlength="500" required></textarea></label><label>Haber metni<textarea asp-for="Input.Body" rows="12" maxlength="12000" required></textarea></label>
+<div class="form-grid"><label class="check"><input asp-for="Input.IsPublished" /> Yayında</label><label class="check"><input asp-for="Input.IsFeatured" /> Ana sayfada öne çıkar</label></div>
+<div class="actions"><button type="submit">Haberi kaydet</button><a asp-action="Index">Vazgeç</a></div>
+</form>

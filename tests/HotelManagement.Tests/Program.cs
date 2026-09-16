@@ -47,8 +47,12 @@ await Test("Room with active request cannot be archived",async ()=> {var f=new F
 await Test("Bulk room creation adds sequential rooms",async ()=> {var f=new Fixture();var count=await f.Service.CreateRoomsAsync(new(){RoomTypeId=f.Type.Id,StartNumber=201,Count=3,Floor=2});Assert(count==3);var added=(await f.Rooms.ListAsync()).Where(x=>x.Number!="101").OrderBy(x=>x.Number).ToList();Assert(added.Count==3 && added[0].Number=="201" && added[2].Number=="203" && added.All(x=>x.Floor==2));});
 await Test("Bulk room creation rejects duplicate batch without partial add",async ()=> {var f=new Fixture();await Reject(()=>f.Service.CreateRoomsAsync(new(){RoomTypeId=f.Type.Id,StartNumber=100,Count=3,Floor=1}));Assert((await f.Rooms.ListAsync()).Count==1);});
 await Test("Room type can be saved without optional fields",async ()=> {var f=new Fixture();await f.Service.SaveTypeAsync(new(){Name="Standard",Description="Test oda",BasePrice=2500,Capacity=2,BedCount=1,SizeInSquareMeters=24});var saved=(await f.Types.ListAsync()).Single(x=>x.Name=="Standard");Assert(saved.Amenities=="" && saved.ImageUrls=="");});
-await Test("Room type accepts safe local image path",async ()=> {var f=new Fixture();await f.Service.SaveTypeAsync(new(){Name="Suite",Description="Test oda",BasePrice=5000,Capacity=3,BedCount=2,SizeInSquareMeters=45,ImageUrls="/images/room-family-suite.webp"});var saved=(await f.Types.ListAsync()).Single(x=>x.Name=="Suite");Assert(saved.ImageUrls=="/images/room-family-suite.webp");});
+await Test("Room type stores featured display order",async ()=> {var f=new Fixture();await f.Service.SaveTypeAsync(new(){Name="Suite",Description="Test oda",BasePrice=5000,Capacity=3,BedCount=2,SizeInSquareMeters=45,IsFeatured=true,FeaturedOrder=3});var saved=(await f.Types.ListAsync()).Single(x=>x.Name=="Suite");Assert(saved.IsFeatured && saved.FeaturedOrder==3);});
 await Test("History keeps original room label and type",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());var b=(await f.Bookings.GetAsync(id))!;f.Room.Number="999";f.Type.Name="Changed";Assert(b.ToDto(false).RoomNumber=="101" && b.ToDto(false).TypeName=="Deluxe");});
+await Test("Dynamic home content has safe defaults",async ()=> {var f=new ContentFixture();var home=await f.Service.HomeAsync();Assert(home.Input.HeroTitle.Contains("Şehrin içinde") && home.HeroImageUrl==null);});
+await Test("News slugs are normalized and stored",async ()=> {var f=new ContentFixture();await f.Service.SaveNewsAsync(new(){Slug="Şehirde Yeni Bir Gün!",Category="Rehber",Title="Yeni gün",Summary="Kısa bir haber özeti",Body="Yeterince uzun haber metni",PublishedAt=day,ReadingMinutes=2},null,false);Assert((await f.Articles.ListAsync()).Single().Slug=="sehirde-yeni-bir-gun");});
+await Test("Fake image upload is rejected",async ()=> {var f=new ContentFixture();await Reject(()=>f.Service.UpdateRoomImagesAsync(f.Type.Id,[new("fake.png","image/png",[1,2,3,4])],[]));});
+await Test("Uploaded room image is linked to its room type",async ()=> {var f=new ContentFixture();var png=new byte[]{0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a};await f.Service.UpdateRoomImagesAsync(f.Type.Id,[new("room.png","image/png",png)],[]);Assert((await f.Images.ListAsync()).Single().RoomTypeId==f.Type.Id && (await f.Media.ListAsync()).Single().ContentType=="image/png");});
 Console.WriteLine($"{passed} business-rule tests passed. PostgreSQL/Identity/browser integration is a separate manual checklist.");
 
 sealed class MemoryRepository<T>:IRepository<T> where T:BaseEntity
@@ -58,6 +62,7 @@ sealed class MemoryRepository<T>:IRepository<T> where T:BaseEntity
     public Task<List<T>> ListAsync(Expression<Func<T,bool>>? filter=null)=>Task.FromResult(filter==null?data.ToList():data.Where(filter.Compile()).ToList());
     public Task<bool> AnyAsync(Expression<Func<T,bool>> filter)=>Task.FromResult(data.Any(filter.Compile()));
     public void Add(T item)=>data.Add(item);
+    public void Remove(T item)=>data.Remove(item);
 }
 sealed class MemoryUnit:IUnitOfWork
 {
@@ -88,4 +93,15 @@ sealed class Fixture
         Service=new(Types,Rooms,Bookings,Reviews,Jobs,new MemoryUnit(),new FixedClock());
     }
     public BookingInput Input()=>new(){RoomId=Room.Id,CheckInDate=new(2026,9,9),CheckOutDate=new(2026,9,11),GuestCount=2,GuestName="Test User",GuestPhone="05000000000"};
+}
+sealed class ContentFixture
+{
+    public readonly RoomType Type=new(){Name="Deluxe",Description="Test",BasePrice=1000,Capacity=2,BedCount=1,SizeInSquareMeters=25};
+    public readonly MemoryRepository<HomePageContent> Home=new();
+    public readonly MemoryRepository<NewsArticle> Articles=new();
+    public readonly MemoryRepository<MediaAsset> Media=new();
+    public readonly MemoryRepository<RoomTypeImage> Images=new();
+    public readonly MemoryRepository<RoomType> Types=new();
+    public ContentService Service {get;}
+    public ContentFixture(){Types.Add(Type);Service=new(Home,Articles,Media,Images,Types,new MemoryUnit(),new FixedClock());}
 }

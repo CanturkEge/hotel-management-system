@@ -1,5 +1,6 @@
 using System.Globalization;
 using HotelManagement.Domain.Enums;
+using HotelManagement.Application.DTOs;
 namespace HotelManagement.Web.Helpers;
 public static class Ui
 {
@@ -18,4 +19,7 @@ public static class Ui
     public static string[] Images(string urls)=>urls.Split('\n',StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries)
         .Where(u=>(Uri.TryCreate(u,UriKind.Absolute,out var uri)&&uri.Scheme=="https") ||
             (u.StartsWith("/images/",StringComparison.OrdinalIgnoreCase)&&!u.Contains("..",StringComparison.Ordinal))).ToArray();
+    public static string[] Images(RoomTypeDto type)=>type.Images.Count>0
+        ? type.Images.OrderBy(x=>x.SortOrder).Select(x=>x.Url).ToArray()
+        : Images(type.ImageUrls);
 }

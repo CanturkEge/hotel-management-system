@@ -6,17 +6,24 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelManagement.Web.Controllers;
 
 [AllowAnonymous]
-public class HomeController(IHotelService hotel,IHotelClock clock) : Controller
+public class HomeController(IHotelService hotel,IContentService content,IHotelClock clock) : Controller
 {
-    public async Task<IActionResult> Index()=>View(new CatalogPage(await hotel.TypesAsync(),await hotel.ReviewsAsync()));
+    public async Task<IActionResult> Index()
+    {
+        var types=await hotel.TypesAsync();
+        var featured=types.Where(x=>x.IsFeatured).OrderBy(x=>x.FeaturedOrder).ThenBy(x=>x.BasePrice).ToList();
+        if(featured.Count==0)featured=types.Take(4).ToList();
+        var news=(await content.NewsAsync()).Where(x=>x.IsFeatured).Take(3).ToList();
+        return View(new CatalogPage(featured,await hotel.ReviewsAsync(),await content.HomeAsync(),news));
+    }
     [HttpGet("/hakkimizda")]
     public IActionResult About()=>View();
     [HttpGet("/haberler")]
-    public IActionResult News()=>View(SiteContent.News);
+    public async Task<IActionResult> News()=>View(await content.NewsAsync());
     [HttpGet("/haberler/{slug}")]
-    public IActionResult NewsDetail(string slug)
+    public async Task<IActionResult> NewsDetail(string slug)
     {
-        var article=SiteContent.News.FirstOrDefault(x=>x.Slug.Equals(slug,StringComparison.OrdinalIgnoreCase));
+        var article=await content.NewsBySlugAsync(slug);
         return article==null?NotFound():View(article);
     }
     [HttpGet("/iletisim")]

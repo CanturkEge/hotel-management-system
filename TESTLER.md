@@ -63,24 +63,25 @@ mevcut veriler silinmemeli. Uygulamayı kapatıp açınca kayıtlar kalmalı.
 
 1. Ana sayfa ve müsaitlik sayfası girişsiz açılsın. Dar mobil ekranda alanlar okunabilsin.
 2. Süper admin → personel girişi → resepsiyon, temizlik, teknik servis hesapları oluşturun.
-3. Admin ile oda tipi oluşturun (8'den çok veya HTTPS olmayan görsel adresi reddedilmeli).
-4. Fiziksel oda ekleyin; aynı numara ikinci kez eklenmemeli. Toplu ekleme formuyla 201'den başlayan
+3. Admin ile oda tipi oluşturun; dosyadan JPEG/PNG/WebP/AVIF yükleyin (5 MB üstü, sahte uzantı ve 8'den çok toplam görsel reddedilmeli).
+4. Site içeriğinden ana sayfa metin/kapak görselini değiştirin; haber ekleyip taslak/yayın ve öne çıkan sırasını doğrulayın.
+5. Fiziksel oda ekleyin; aynı numara ikinci kez eklenmemeli. Toplu ekleme formuyla 201'den başlayan
    3 oda oluşturun; 201, 202 ve 203 aynı kat ve tipte görünmeli. İçlerinden biri mevcutsa hiçbirinin eklenmediğini doğrulayın.
-5. Müşteri kaydı oluşturun. Personel girişinden müşteri hesabına giriş reddedilmeli ve tersi de geçerli.
-6. Giriş bugün, çıkış yarın olacak şekilde talep açın; fiyat backend'deki oda tipi fiyatından gelsin.
-7. Başka müşteri aynı oda için pending talep açabilir; bu talepler henüz kesinleşmiş değildir.
-8. Resepsiyon ilkini onaylasın; çakışan diğerini onaylamak reddedilmeli.
-9. Onaylı rezervasyona check-in yapın. Oda dolu görünsün; ikinci giriş yapılamasın.
-10. Check-out yapın. Temizlik görevi oluşsun; odaya yeni rezervasyon reddedilsin.
-11. Temizlik görevlisi temizlendi desin. Başka açık görev yoksa oda açılsın.
-12. Teknik arıza ve temizlik görevini birlikte açın. Sadece temizliği bitirmek odayı açmamalı.
-13. Teknik servis bakım görevini bitirsin. Tüm görevler bittiyse ve konaklayan yoksa oda açılsın.
-14. Çıkış yapan müşteri yorum yazsın; ikinci yorum ve konaklamayan kişinin yorumu reddedilsin.
-15. Yönetici yorumu yayınlayınca yalnız ilgili oda tipi sayfasında ve ana yorumlarda görünsün.
-16. Tamamlanan konaklama ücretini, oda numarasını veya tipi sonradan değiştirmek eski rezervasyon
+6. Müşteri kaydı oluşturun. Personel girişinden müşteri hesabına giriş reddedilmeli ve tersi de geçerli.
+7. Giriş bugün, çıkış yarın olacak şekilde talep açın; fiyat backend'deki oda tipi fiyatından gelsin.
+8. Başka müşteri aynı oda için pending talep açabilir; bu talepler henüz kesinleşmiş değildir.
+9. Resepsiyon ilkini onaylasın; çakışan diğerini onaylamak reddedilmeli.
+10. Onaylı rezervasyona check-in yapın. Oda dolu görünsün; ikinci giriş yapılamasın.
+11. Check-out yapın. Temizlik görevi oluşsun; odaya yeni rezervasyon reddedilsin.
+12. Temizlik görevlisi temizlendi desin. Başka açık görev yoksa oda açılsın.
+13. Teknik arıza ve temizlik görevini birlikte açın. Sadece temizliği bitirmek odayı açmamalı.
+14. Teknik servis bakım görevini bitirsin. Tüm görevler bittiyse ve konaklayan yoksa oda açılsın.
+15. Çıkış yapan müşteri yorum yazsın; ikinci yorum ve konaklamayan kişinin yorumu reddedilsin.
+16. Yönetici yorumu yayınlayınca yalnız ilgili oda tipi sayfasında ve ana yorumlarda görünsün.
+17. Tamamlanan konaklama ücretini, oda numarasını veya tipi sonradan değiştirmek eski rezervasyon
     ekranındaki ücret/etiketleri değiştirmemeli. Review oda tipi ilişkisi de korunmalı.
-17. Müşteri adına personel rezervasyon oluşturabilsin; yalnız mevcut müşteri hesabı seçilebilsin.
-18. Tüm rollerde çıkış butonu çalışsın. Geri tuşundan sonra korunan sayfayı yenilemek tekrar giriş istesin.
+18. Müşteri adına personel rezervasyon oluşturabilsin; yalnız mevcut müşteri hesabı seçilebilsin.
+19. Tüm rollerde çıkış butonu çalışsın. Geri tuşundan sonra korunan sayfayı yenilemek tekrar giriş istesin.
 
 ## 4. Yetki ve güvenlik
 
