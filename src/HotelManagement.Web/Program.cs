@@ -38,12 +38,13 @@ builder.Services.ConfigureApplicationCookie(options=> {
 builder.Services.Configure<SecurityStampValidatorOptions>(options=>options.ValidationInterval=TimeSpan.Zero);
 builder.Services.Configure<ForwardedHeadersOptions>(options=> {
     options.ForwardedHeaders=ForwardedHeaders.XForwardedFor|ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
 builder.Services.AddScoped(typeof(IRepository<>),typeof(EfRepository<>));
 builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
 builder.Services.AddScoped<IHotelService,HotelService>();
+builder.Services.AddScoped<IContentService,ContentService>();
 builder.Services.AddScoped<IAccountService,AccountService>();
 builder.Services.AddSingleton<IHotelClock,HotelClock>();
 builder.Services.AddRateLimiter(options=> {
@@ -65,6 +66,11 @@ if(setup)
     Console.WriteLine("Kurulum tamamlandi. Oda ornekleri ve yonetici hesaplari hazir.");
     return;
 }
+
+// One Render instance runs this MVP. Apply committed EF migrations before serving requests so
+// deployments and the database schema cannot drift apart.
+await using(var migrationScope=app.Services.CreateAsyncScope())
+    await migrationScope.ServiceProvider.GetRequiredService<HotelDbContext>().Database.MigrateAsync();
 
 // Invariant form parsing keeps decimal points and ISO dates consistent with HTML number/date controls.
 var culture=CultureInfo.InvariantCulture;

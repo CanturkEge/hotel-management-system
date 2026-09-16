@@ -15,11 +15,12 @@ Gerçek giriş, yetki ve tarayıcı akışları `TESTLER.md` listesinden ayrıca
 ## Dahil
 
 - Müşteri kayıt/giriş, ayrı personel girişi, çalışan POST çıkış formu.
-- Kurumsal ana sayfa, tarih arama kutusu, Meridian Journal haberleri, hakkımızda ve iletişim sayfaları.
+- Yönetici tarafından düzenlenebilen kurumsal ana sayfa, öne çıkan odalar ve Meridian Journal haberleri.
 - Modern müşteri alanı: rezervasyon özetleri, sıradaki konaklama ve durum zaman çizelgesi.
 - Tek başlangıç Admin ve SuperAdmin; Reception, Cleaner, Maintenance personel hesapları.
 - Süper admin tarafından personel oluşturma ve personel rol değiştirme.
-- Oda tipi: açıklama, fiyat, kapasite, yatak sayısı, alan, olanaklar, 8 adrese kadar görsel galerisi.
+- Oda tipi: açıklama, fiyat, kapasite, yatak sayısı, alan, olanaklar ve dosyadan yüklenen 8 görsele kadar galeri.
+- JPEG/PNG/WebP/AVIF imza kontrolü, 5 MB dosya sınırı ve kalıcı PostgreSQL medya saklama.
 - Fiziksel oda ekleme/düzenleme/satıştan kaldırma; ardışık numaralarla tek seferde 100 odaya kadar toplu ekleme. Geçmiş kayıtlar korunur.
 - Tarih/kişi ile müsaitlik arama; seçilen oda için dolu tarih aralıkları.
 - Müşteri talebi veya resepsiyonun müşteri adına talebi; onay/ret, iptal, check-in/check-out.
@@ -34,9 +35,8 @@ Gerçek giriş, yetki ve tarayıcı akışları `TESTLER.md` listesinden ayrıca
 ## Bu sürümün kapsamı dışında
 
 Ödeme/tahsilat, fatura, e-posta doğrulama/şifre sıfırlama, çok faktörlü giriş, stok/tedarikçi,
-sezonluk fiyat tarifesi, çoklu otel, fotoğrafın uygulama içinden yüklenmesi, canlı yayın ve eski veriyi taşıma yoktur.
-Görseller bu sürümde yönetici tarafından HTTPS adresleriyle tanımlanır; Supabase Storage panelinden
-yükleyip URL eklemek mümkündür. Bu ayrım bilinçlidir: uygulama içinde upload varmış gibi davranılmaz.
+sezonluk fiyat tarifesi, çoklu otel, otomatik görsel dönüştürme/sıkıştırma, canlı yayın ve eski veriyi taşıma yoktur.
+Yüklenen tanıtım görselleri özel `hotel` şemasında tutulur; kimlik, evrak veya misafir fotoğrafı yüklenmemelidir.
 Gerçek misafirlerle kullanılmadan önce bu eksikler, veri saklama/mahremiyet süreci, yedekleme ve
 operasyonel güvenlik mentorla tamamlanmalı. Frontend tasarımı referans otelin kodunu/fotoğraflarını kopyalamaz.
 

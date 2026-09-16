@@ -139,16 +139,17 @@ Sertifika güven sorusunu inceleyip onayladıktan sonra https://localhost:7080 k
 Müşteri ve personeli aynı anda test etmek için normal pencere + gizli pencere kullanın.
 Aynı tarayıcı profilindeki sekmeler aynı oturum çerezini paylaşır.
 
-## 7. Görseller (isteğe bağlı)
+## 7. Görseller ve içerik yönetimi
 
-Paket özgün üretilmiş temsili oda fotoğrafıyla açılır. Gerçek otele aitmiş gibi sunmayın.
-Kendi görselleriniz için Supabase Dashboard → Storage bölümünde yalnız oda tanıtım görselleri için
-örneğin `room-images` adlı **public** bucket oluşturabilirsiniz. Bu bucket'ın okunması herkese açıktır;
-kimlik, evrak, misafir fotoğrafı veya özel dosya koymayın.
-Görseli Supabase panelinden kendiniz yükleyin, public URL'sini alın, oda tipi düzenleme ekranındaki
-Görseller alanına yapıştırın. Her satıra bir URL; en fazla 8. Anahtar veya imzalı özel URL koymayın.
-Uygulamanın kendisi Storage'a yükleme yapmaz. Tarayıcıya hiçbir secret/service-role anahtarı gitmez.
-[Supabase public bucket erişimi](https://supabase.com/docs/guides/storage/buckets/fundamentals)
+Paket özgün üretilmiş temsili oda fotoğraflarıyla açılır. Gerçek otele aitmiş gibi sunmayın.
+Admin veya SuperAdmin hesabıyla **Site içeriği** ekranından ana sayfayı ve haberleri; **Oda tipleri**
+ekranından öne çıkan odaları ve galerileri yönetebilirsiniz. Görseller bağlantı yapıştırılarak değil,
+dosya seçilerek yüklenir. JPEG, PNG, WebP ve AVIF kabul edilir; dosya başına sınır 5 MB, oda başına
+toplam sınır 8 görseldir. Dosyanın gerçek imzası sunucuda kontrol edilir.
+
+Yüklenen dosyalar Render'ın geçici diskinde değil, özel `hotel` şemasındaki medya tablosunda kalıcı
+tutulur. Bu alan yalnızca herkese açık otel/oda tanıtım görselleri içindir; kimlik, evrak, ödeme belgesi,
+misafir fotoğrafı veya başka özel veri yüklemeyin. Büyük ölçekli kullanımda nesne depolamaya geçin.
 
 ## 8. GitHub'a kaydet
 

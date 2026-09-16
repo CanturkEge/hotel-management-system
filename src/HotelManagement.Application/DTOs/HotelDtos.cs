@@ -12,8 +12,9 @@ public class RoomTypeInput
     [Range(1, 20)] public int BedCount { get; set; } = 1;
     [Range(5, 1000)] public int SizeInSquareMeters { get; set; } = 25;
     [StringLength(1000)] public string? Amenities { get; set; }
-    [StringLength(8000)] public string? ImageUrls { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsFeatured { get; set; }
+    [Range(0, 999)] public int FeaturedOrder { get; set; }
 }
 
 public class RoomInput
@@ -57,8 +58,10 @@ public class JobInput
     [Required, StringLength(1000, MinimumLength=3)] public string Description { get; set; } = "";
 }
 
+public record RoomImageDto(Guid Id, string Url, string AltText, int SortOrder);
 public record RoomTypeDto(Guid Id, string Name, string Description, decimal BasePrice, int Capacity,
-    int BedCount, int SizeInSquareMeters, string Amenities, string ImageUrls, bool IsActive);
+    int BedCount, int SizeInSquareMeters, string Amenities, string ImageUrls, bool IsActive,
+    bool IsFeatured, int FeaturedOrder, IReadOnlyList<RoomImageDto> Images);
 public record RoomDto(Guid Id, string Number, int Floor, Guid RoomTypeId, string TypeName,
     decimal Price, int Capacity, RoomStatus Status, bool IsActive);
 public record BusyPeriod(DateOnly Start, DateOnly End);

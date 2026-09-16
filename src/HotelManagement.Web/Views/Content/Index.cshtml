@@ -1,0 +1,17 @@
+@model ContentDashboardPage
+@{ViewData["Title"]="İçerik yönetimi";}
+<div class="section-heading"><div><p class="eyebrow">YAYIN YÖNETİMİ</p><h1>Site içeriği</h1><p class="lead">Ana sayfa, öne çıkan odalar ve haberler buradan yönetilir.</p></div><div class="actions"><a class="button" asp-action="EditNews">Yeni haber</a><a class="button secondary" asp-action="Home">Ana sayfayı düzenle</a></div></div>
+
+<section class="panel content-summary">
+    <div>@if(Model.Home.HeroImageUrl!=null){<img src="@Model.Home.HeroImageUrl" alt="Ana sayfa kapak görseli" />}<div><p class="eyebrow">ANA SAYFA</p><h2>@Model.Home.Input.HeroTitle</h2><p>@Model.Home.Input.HeroText</p></div></div>
+    <a class="text-action" asp-action="Home">Metin ve görseli düzenle →</a>
+</section>
+
+<div class="section-heading"><div><p class="eyebrow">MERIDIAN JOURNAL</p><h2>Haberler</h2></div><span>@Model.News.Count kayıt</span></div>
+<div class="table-scroll"><table><thead><tr><th>Haber</th><th>Tarih</th><th>Öne çıkan</th><th>Yayın</th><th></th></tr></thead><tbody>
+@foreach(var item in Model.News)
+{
+    <tr><td><strong>@item.Title</strong><small class="table-subtitle">/@item.Slug · @item.Category</small></td><td>@Ui.Date(item.PublishedAt)</td><td>@(item.IsFeatured?$"Evet · {item.SortOrder}":"Hayır")</td><td>@(item.IsPublished?"Yayında":"Taslak")</td><td><div class="table-actions"><a asp-action="EditNews" asp-route-id="@item.Id">Düzenle</a><form asp-action="SetNewsPublished" method="post"><input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="published" value="@(!item.IsPublished)" /><button class="link-button" type="submit">@(item.IsPublished?"Yayından kaldır":"Yayınla")</button></form></div></td></tr>
+}
+</tbody></table></div>
+@if(Model.News.Count==0){<p class="empty">Henüz haber eklenmedi.</p>}

@@ -4,27 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace HotelManagement.Web.Models;
 
-public record CatalogPage(List<RoomTypeDto> Types,List<ReviewDto> Reviews);
-public record NewsItem(string Slug,string Category,string Title,string Summary,string Body,DateOnly PublishedAt,int ReadingMinutes);
-
-public static class SiteContent
-{
-    public static readonly IReadOnlyList<NewsItem> News=
-    [
-        new("sehirde-yavas-bir-hafta-sonu","Şehir Rehberi","Şehirde yavaş bir hafta sonu",
-            "Koşturmayı bırakıp İstanbul'un sakin köşelerini keşfetmek için küçük bir Meridian rotası.",
-            "Güne telaşsız bir kahvaltıyla başlayın. Moda sahilinde kısa bir yürüyüşten sonra Yeldeğirmeni'nin ara sokaklarına geçin; küçük dükkânlar, kahve molaları ve tarihi apartmanlar günün temposunu kendiliğinden düşürür.\n\nAkşamüstünü gün batımına ayırın. Otelinize döndüğünüzde resepsiyon ekibimiz yakın çevredeki güncel önerileri paylaşabilir. En iyi şehir planı bazen en az duraklı olandır.",
-            new(2026,9,12),3),
-        new("meridian-kahvalti-ritueli","Lezzet","Meridian kahvaltı ritüeli",
-            "Yerel ürünler, mevsim tatları ve uzun sohbetlere yakışan sade bir sabah masası.",
-            "Kahvaltımızda gösterişten çok iyi ürüne yer açıyoruz. Mevsim meyveleri, günlük ekmekler, yerel peynirler ve mutfağımızdan çıkan sıcak tabaklar küçük porsiyonlarla masaya geliyor.\n\nAlerjen veya özel beslenme tercihiniz varsa varıştan önce bize ulaşmanız yeterli. Ekibimiz uygun seçenekleri önceden planlar.",
-            new(2026,9,8),2),
-        new("konaklamanizi-kolaylastiran-yenilikler","Meridian'dan","Konaklamanızı kolaylaştıran yenilikler",
-            "Rezervasyondan çıkışa kadar daha açık, hızlı ve sakin bir dijital misafir deneyimi.",
-            "Yeni misafir alanımız ile rezervasyon taleplerinizi tek ekrandan takip edebilir, yaklaşan konaklamanızı görebilir ve tamamlanan ziyaretinizi değerlendirebilirsiniz.\n\nMüsaitlik ekranı tarih ve kişi sayısına göre uygun odaları karşılaştırır. Her adımda toplam fiyatı görürsünüz; sürpriz ücret yoktur.",
-            new(2026,9,1),2)
-    ];
-}
+public record CatalogPage(List<RoomTypeDto> Types,List<ReviewDto> Reviews,HomePageDto Home,List<NewsArticleDto> News);
 
 public class ContactInput
 {
@@ -53,6 +33,32 @@ public class RoomEditPage
 {
     public RoomInput Input {get;set;}=new();
     [BindNever,ValidateNever] public List<RoomTypeDto> Types {get;set;}=[];
+}
+public class RoomTypeEditorPage
+{
+    public RoomTypeInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public List<RoomImageDto> ExistingImages {get;set;}=[];
+    [ValidateNever] public List<IFormFile> Images {get;set;}=[];
+    public List<Guid> RemoveImageIds {get;set;}=[];
+}
+public class ContentDashboardPage
+{
+    public HomePageDto Home {get;set;}=null!;
+    public List<NewsArticleDto> News {get;set;}=[];
+}
+public class HomeContentEditorPage
+{
+    public HomePageInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public string? CurrentHeroImageUrl {get;set;}
+    [ValidateNever] public IFormFile? HeroImage {get;set;}
+    public bool RemoveHeroImage {get;set;}
+}
+public class NewsEditorPage
+{
+    public NewsArticleInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public string? CurrentCoverImageUrl {get;set;}
+    [ValidateNever] public IFormFile? CoverImage {get;set;}
+    public bool RemoveCoverImage {get;set;}
 }
 public class RoomManagementPage
 {

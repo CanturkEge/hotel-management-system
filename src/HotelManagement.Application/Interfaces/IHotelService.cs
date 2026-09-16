@@ -5,7 +5,7 @@ namespace HotelManagement.Application.Interfaces;
 public interface IHotelService
 {
     Task<List<RoomTypeDto>> TypesAsync(bool includeInactive = false);
-    Task SaveTypeAsync(RoomTypeInput input);
+    Task<Guid> SaveTypeAsync(RoomTypeInput input);
     Task<List<RoomDto>> RoomsAsync(bool includeInactive = false);
     Task SaveRoomAsync(RoomInput input);
     Task<int> CreateRoomsAsync(BulkRoomInput input);

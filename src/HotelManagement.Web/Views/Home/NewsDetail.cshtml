@@ -1,9 +1,9 @@
-@model NewsItem
-@{ViewData["Title"]=Model.Title;var tone=Model.Slug switch {"sehirde-yavas-bir-hafta-sonu"=>1,"meridian-kahvalti-ritueli"=>2,_=>3};}
+@model NewsArticleDto
+@{ViewData["Title"]=Model.Title;var tone=(int)((uint)Model.Slug.GetHashCode()%3)+1;}
 <article class="article-page">
     <a class="back-link" asp-action="News">← Tüm haberler</a>
     <header><p class="eyebrow">@Model.Category · @Ui.LongDate(Model.PublishedAt) · @Model.ReadingMinutes dk okuma</p><h1>@Model.Title</h1><p class="lead">@Model.Summary</p></header>
-    <div class="article-cover news-visual-@tone" aria-hidden="true"><span>MERIDIAN JOURNAL</span></div>
+    @if(Model.CoverImageUrl!=null){<img class="article-cover article-cover-image" src="@Model.CoverImageUrl" alt="@Model.Title" />}else{<div class="article-cover news-visual-@tone" aria-hidden="true"><span>MERIDIAN JOURNAL</span></div>}
     <div class="article-body prewrap">@Model.Body</div>
     <aside class="article-cta"><div><p class="eyebrow">SIRADAKİ KONAKLAMANIZ</p><h2>Şehri kendi ritminizde keşfedin.</h2></div><a class="button" asp-action="Search">Müsait odalara bak</a></aside>
 </article>
