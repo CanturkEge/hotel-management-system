@@ -158,12 +158,13 @@ namespace HotelManagement.Infrastructure.Migrations
                     ("Id", "ReservationId", "Status", "Title", "Description", "Actor", "CreatedAtUtc")
                 SELECT gen_random_uuid(), "Id", "Status",
                        CASE "Status"
-                           WHEN 1 THEN 'Rezervasyon onaylandı'
-                           WHEN 2 THEN 'Rezervasyon reddedildi'
-                           WHEN 3 THEN 'Rezervasyon iptal edildi'
-                           WHEN 4 THEN 'Giriş yapıldı'
-                           WHEN 5 THEN 'Çıkış yapıldı'
-                           ELSE 'Rezervasyon oluşturuldu'
+                           WHEN 1 THEN 'Rezervasyon talebi oluşturuldu'
+                           WHEN 2 THEN 'Rezervasyon onaylandı'
+                           WHEN 3 THEN 'Otele giriş yapıldı'
+                           WHEN 4 THEN 'Konaklama tamamlandı'
+                           WHEN 5 THEN 'Rezervasyon iptal edildi'
+                           WHEN 6 THEN 'Rezervasyon reddedildi'
+                           ELSE 'Rezervasyon güncellendi'
                        END,
                        'Mevcut rezervasyon kaydı geçmiş görünümü için aktarıldı.',
                        'Sistem', "CreatedAtUtc"
