@@ -17,9 +17,18 @@ public class Reservation : BaseEntity
     public string GuestName { get; set; } = "";
     public string GuestPhone { get; set; } = "";
     public decimal NightlyPrice { get; set; }
+    public Guid? StayPackageId { get; set; }
+    public StayPackage? StayPackage { get; set; }
+    public string PackageName { get; set; } = "Standart";
+    public string PackageDescription { get; set; } = "Temel konaklama paketi";
+    public string PackageBenefits { get; set; } = "Oda konaklaması";
+    public decimal PackagePricePerNight { get; set; }
+    public decimal RoomSubtotal { get; set; }
+    public decimal PackageSubtotal { get; set; }
     public decimal TotalPrice { get; set; }
     public string Currency { get; set; } = "TRY";
     public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
     public DateTime? ActualCheckInUtc { get; set; }
     public DateTime? ActualCheckOutUtc { get; set; }
+    public List<ReservationEvent> Events { get; set; } = [];
 }

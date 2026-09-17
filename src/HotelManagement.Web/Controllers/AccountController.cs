@@ -7,13 +7,15 @@ namespace HotelManagement.Web.Controllers;
 
 public class AccountController(IAccountService accounts) : Controller
 {
-    [AllowAnonymous,HttpGet] public IActionResult Login()=>View(new LoginInput());
-    [AllowAnonymous,HttpGet] public IActionResult StaffLogin()=>View("Login",new LoginInput{Staff=true});
+    [AllowAnonymous,HttpGet] public IActionResult Login(string? returnUrl=null)=>View(new LoginInput{ReturnUrl=returnUrl});
+    [AllowAnonymous,HttpGet] public IActionResult StaffLogin(string? returnUrl=null)=>View("Login",new LoginInput{Staff=true,ReturnUrl=returnUrl});
     [AllowAnonymous,HttpPost,EnableRateLimiting("accounts")]
     public async Task<IActionResult> Login(LoginInput input)
     {
         if(ModelState.IsValid && await accounts.LoginAsync(input))
-            return input.Staff ? RedirectToAction("Index","Staff") : RedirectToAction("Index","Bookings");
+            return !string.IsNullOrWhiteSpace(input.ReturnUrl)&&Url.IsLocalUrl(input.ReturnUrl)
+                ? LocalRedirect(input.ReturnUrl)
+                : input.Staff ? RedirectToAction("Index","Staff") : RedirectToAction("Index","Bookings");
         ModelState.AddModelError("","Giriş yapılamadı. Bilgilerinizi ve müşteri/personel girişini kontrol edin. Çok sayıda denemede 15 dakika bekleyin.");
         input.Password=""; ModelState.Remove(nameof(input.Password)); return View(input);
     }

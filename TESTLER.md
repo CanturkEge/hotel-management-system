@@ -4,8 +4,8 @@
 
 - Kaynak dosyaları, proje referansları, yapılandırma JSON/XML, controller/view bağlantıları statik incelendi.
 - JavaScript için `node --check` çalıştırıldı.
-- Linux/.NET 10 ortamında C# / Razor derlemesi ve 25 iş kuralı testi başarıyla çalıştırıldı.
-- PostgreSQL migration, gerçek Identity oturumu ve tarayıcı akışları bu ortamda çalıştırılmadı.
+- Linux/.NET 10 ortamında C# / Razor derlemesi ve 35 iş kuralı testi başarıyla çalıştırıldı.
+- PostgreSQL migration SQL'i canlı şemada `BEGIN/ROLLBACK` işlemiyle hatasız doğrulandı; gerçek Identity ve tarayıcı akışları ayrıca kontrol edilmelidir.
 - Aşağıdaki adımları geçti demeden uygulamayı gerçek müşteriye yayınlamayın.
 
 ## 1. Derleme + servis testleri
@@ -25,8 +25,9 @@ dotnet run --project tests/HotelManagement.Tests
 Testler bellek içi repository ile servis davranışlarını kontrol eder; PostgreSQL transaction,
 RLS, gerçek concurrency, Identity cookie, CSRF veya MVC model binding yerine geçmez.
 
-Kapsanan 25 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
-fiyat snapshot, geçmiş tarih, sıfır gece, kapasite aşımı, temizlik kilidi, açık bakım kilidi,
+Kapsanan 35 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
+oda ve paket fiyat snapshot'ı, paketli toplam, pasif paket reddi, rezervasyon işlem geçmişi,
+detay sahipliği, geçmiş tarih, sıfır gece, kapasite aşımı, temizlik kilidi, açık bakım kilidi,
 tekrar pending istek, çifte onay kontrolü, onaysız check-in, checkout-temizlik,
 başkasının rezervasyonunu iptal, konaklamadan yorum, tek yorum, yorum sahipliği,
 yanlış görev rolü, bakım sürerken temizliğin odayı açmaması, tüm görevlerin bitmesi,
@@ -68,7 +69,8 @@ mevcut veriler silinmemeli. Uygulamayı kapatıp açınca kayıtlar kalmalı.
 5. Fiziksel oda ekleyin; aynı numara ikinci kez eklenmemeli. Toplu ekleme formuyla 201'den başlayan
    3 oda oluşturun; 201, 202 ve 203 aynı kat ve tipte görünmeli. İçlerinden biri mevcutsa hiçbirinin eklenmediğini doğrulayın.
 6. Müşteri kaydı oluşturun. Personel girişinden müşteri hesabına giriş reddedilmeli ve tersi de geçerli.
-7. Giriş bugün, çıkış yarın olacak şekilde talep açın; fiyat backend'deki oda tipi fiyatından gelsin.
+7. Giriş bugün, çıkış yarın olacak şekilde talep açın; Standart, Gold ve Premium seçenekleri görünsün.
+   Toplam, backend'deki oda tipi ile seçilen paketin gecelik fiyatlarından hesaplansın.
 8. Başka müşteri aynı oda için pending talep açabilir; bu talepler henüz kesinleşmiş değildir.
 9. Resepsiyon ilkini onaylasın; çakışan diğerini onaylamak reddedilmeli.
 10. Onaylı rezervasyona check-in yapın. Oda dolu görünsün; ikinci giriş yapılamasın.
@@ -81,7 +83,9 @@ mevcut veriler silinmemeli. Uygulamayı kapatıp açınca kayıtlar kalmalı.
 17. Tamamlanan konaklama ücretini, oda numarasını veya tipi sonradan değiştirmek eski rezervasyon
     ekranındaki ücret/etiketleri değiştirmemeli. Review oda tipi ilişkisi de korunmalı.
 18. Müşteri adına personel rezervasyon oluşturabilsin; yalnız mevcut müşteri hesabı seçilebilsin.
-19. Tüm rollerde çıkış butonu çalışsın. Geri tuşundan sonra korunan sayfayı yenilemek tekrar giriş istesin.
+19. Müşteri ve personel rezervasyon detayında oda/paket ücret dökümünü ve tüm durum hareketlerini görsün.
+20. Yönetici paket fiyatını ve avantajlarını düzenleyebilsin; aktif rezervasyonda kullanılan paket pasife alınamasın.
+21. Tüm rollerde çıkış butonu çalışsın. Geri tuşundan sonra korunan sayfayı yenilemek tekrar giriş istesin.
 
 ## 4. Yetki ve güvenlik
 

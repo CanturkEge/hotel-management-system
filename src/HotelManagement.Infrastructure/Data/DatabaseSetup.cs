@@ -47,6 +47,7 @@ public static class DatabaseSetup
         }
         if(!await db.HomePageContents.AnyAsync()) db.HomePageContents.Add(DefaultHome());
         if(!await db.NewsArticles.AnyAsync()) db.NewsArticles.AddRange(DefaultNews());
+        if(!await db.StayPackages.AnyAsync()) db.StayPackages.AddRange(DefaultPackages());
         await db.SaveChangesAsync();
         // Private schema: no Data API grants. Enable RLS as defense in depth.
         // Runtime connects through the configured database owner; authorization is enforced by C#.
@@ -117,5 +118,12 @@ public static class DatabaseSetup
         new() {Slug="konaklamanizi-kolaylastiran-yenilikler",Category="Meridian'dan",Title="Konaklamanızı kolaylaştıran yenilikler",IsFeatured=true,SortOrder=2,
             Summary="Rezervasyondan çıkışa kadar daha açık, hızlı ve sakin bir dijital misafir deneyimi.",
             Body="Yeni misafir alanımız ile rezervasyon taleplerinizi tek ekrandan takip edebilir, yaklaşan konaklamanızı görebilir ve tamamlanan ziyaretinizi değerlendirebilirsiniz.\n\nMüsaitlik ekranı tarih ve kişi sayısına göre uygun odaları karşılaştırır. Her adımda toplam fiyatı görürsünüz; sürpriz ücret yoktur.",PublishedAt=new(2026,9,1),ReadingMinutes=2}
+    ];
+
+    private static StayPackage[] DefaultPackages()=>
+    [
+        new() {Name="Standart",Description="Sade ve esnek konaklama deneyimi.",Benefits="Oda konaklaması\nÜcretsiz Wi-Fi\n7/24 resepsiyon",PricePerNight=0,SortOrder=0},
+        new() {Name="Gold",Description="Konforunu artırmak isteyen Meridian üyelerine özel paket.",Benefits="Standart paket ayrıcalıkları\nGünlük kahvaltı\n14.00'e kadar geç çıkış\nKarşılama ikramı",PricePerNight=750,SortOrder=1},
+        new() {Name="Premium",Description="Konaklamayı baştan sona ayrıcalıklı hale getiren üst seviye paket.",Benefits="Gold paket ayrıcalıkları\nHavalimanı transferi\nOda önceliği\nMinibar başlangıç seti",PricePerNight=1500,SortOrder=2}
     ];
 }

@@ -34,6 +34,14 @@ builder.Services.ConfigureApplicationCookie(options=> {
     options.Cookie.SameSite=SameSiteMode.Lax;
     options.Cookie.SecurePolicy=builder.Environment.IsDevelopment()?CookieSecurePolicy.SameAsRequest:CookieSecurePolicy.Always;
     options.ExpireTimeSpan=TimeSpan.FromHours(4); options.SlidingExpiration=true;
+    options.Events.OnRedirectToLogin=context=> {
+        var path=context.Request.Path;
+        var staffArea=path.StartsWithSegments("/Staff")||path.StartsWithSegments("/Management")||path.StartsWithSegments("/Content")||
+            path.StartsWithSegments("/Jobs")||path.StartsWithSegments("/Users");
+        var returnUrl=Uri.EscapeDataString(context.Request.PathBase+context.Request.Path+context.Request.QueryString);
+        context.Response.Redirect($"/Account/{(staffArea?"StaffLogin":"Login")}?returnUrl={returnUrl}");
+        return Task.CompletedTask;
+    };
 });
 builder.Services.Configure<SecurityStampValidatorOptions>(options=>options.ValidationInterval=TimeSpan.Zero);
 builder.Services.Configure<ForwardedHeadersOptions>(options=> {

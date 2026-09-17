@@ -27,6 +27,10 @@ await Test("Contained dates overlap",()=> {Assert(BookingRules.Overlaps(day,day.
 await Test("Decimal server-side total",()=> {Assert(BookingRules.Total(day,day.AddDays(3),1250.50m)==3751.50m);return Task.CompletedTask;});
 await Test("Pending requests do not hold inventory",()=> {Assert(!BookingRules.BlocksDates(ReservationStatus.Pending));return Task.CompletedTask;});
 await Test("Book stores price snapshot",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());var r=await f.Bookings.GetAsync(id);Assert(r!.TotalPrice==7000 && r.NightlyPrice==3500 && r.Status==ReservationStatus.Pending);});
+await Test("Gold package is included in the server-side total",async ()=> {var f=new Fixture();f.Package.PricePerNight=750;var id=await f.Service.BookAsync(f.Customer,f.Input());var r=await f.Bookings.GetAsync(id);Assert(r!.RoomSubtotal==7000 && r.PackageSubtotal==1500 && r.TotalPrice==8500 && r.PackageName=="Gold");});
+await Test("Inactive package cannot be booked",async ()=> {var f=new Fixture();f.Package.IsActive=false;await Reject(()=>f.Service.BookAsync(f.Customer,f.Input()));});
+await Test("Booking and status changes create history",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input(),"Test müşteri");await f.Service.ChangeBookingAsync(id,ReservationStatus.Confirmed,null,"Test resepsiyon");var detail=await f.Service.BookingDetailsAsync(id,f.Customer);Assert(detail.Events.Count==2 && detail.Events[0].Actor=="Test müşteri" && detail.Events[1].Status==ReservationStatus.Confirmed);});
+await Test("Customer cannot view another booking detail",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());await Reject(()=>f.Service.BookingDetailsAsync(id,Guid.NewGuid()));});
 await Test("Past dates rejected",async ()=> {var f=new Fixture();var i=f.Input();i.CheckInDate=day.AddDays(-1);await Reject(()=>f.Service.BookAsync(f.Customer,i));});
 await Test("Same-day checkout rejected",async ()=> {var f=new Fixture();var i=f.Input();i.CheckOutDate=i.CheckInDate;await Reject(()=>f.Service.BookAsync(f.Customer,i));});
 await Test("Over-capacity rejected",async ()=> {var f=new Fixture();var i=f.Input();i.GuestCount=3;await Reject(()=>f.Service.BookAsync(f.Customer,i));});
@@ -84,15 +88,19 @@ sealed class Fixture
     public readonly MemoryRepository<RoomJob> Jobs=new();
     public readonly MemoryRepository<Room> Rooms=new();
     public readonly MemoryRepository<RoomType> Types=new();
+    public readonly StayPackage Package=new(){Name="Gold",Description="Test paket",Benefits="Kahvaltı",PricePerNight=0};
+    public readonly MemoryRepository<StayPackage> Packages=new();
+    public readonly MemoryRepository<ReservationEvent> Events=new();
     public HotelService Service {get;}
     public Fixture()
     {
         Room=new(){Number="101",RoomTypeId=Type.Id,RoomType=Type};
         Types.Add(Type);
         Rooms.Add(Room);
-        Service=new(Types,Rooms,Bookings,Reviews,Jobs,new MemoryUnit(),new FixedClock());
+        Packages.Add(Package);
+        Service=new(Types,Rooms,Bookings,Reviews,Jobs,Packages,Events,new MemoryUnit(),new FixedClock());
     }
-    public BookingInput Input()=>new(){RoomId=Room.Id,CheckInDate=new(2026,9,9),CheckOutDate=new(2026,9,11),GuestCount=2,GuestName="Test User",GuestPhone="05000000000"};
+    public BookingInput Input()=>new(){RoomId=Room.Id,StayPackageId=Package.Id,CheckInDate=new(2026,9,9),CheckOutDate=new(2026,9,11),GuestCount=2,GuestName="Test User",GuestPhone="05000000000"};
 }
 sealed class ContentFixture
 {

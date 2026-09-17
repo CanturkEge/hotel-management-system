@@ -8,7 +8,10 @@
 <label>Misafir sayısı<input asp-for="Input.GuestCount" type="number" min="1" max="@Model.Room.Capacity" required /></label>
 <label>Konaklayacak kişinin adı soyadı<input asp-for="Input.GuestName" autocomplete="name" required maxlength="100" /></label>
 <label>Telefon<input asp-for="Input.GuestPhone" type="tel" autocomplete="tel" required minlength="7" maxlength="30" /></label>
-<p><strong>@Ui.Money(Model.Room.Price)</strong> / gece. Toplam ücret, talep gönderilirken güncel gecelik fiyat üzerinden hesaplanır ve konaklamalarınızda gösterilir.</p>
+<fieldset class="package-picker"><legend>Konaklama paketinizi seçin</legend>
+@foreach(var package in Model.Packages){<label class="package-option"><input asp-for="Input.StayPackageId" type="radio" value="@package.Id" required /><span><strong>@package.Name</strong><small>@package.Description</small><span class="prewrap">@package.Benefits</span></span><b>@(package.PricePerNight==0?"Dahil":$"+{Ui.Money(package.PricePerNight)} / gece")</b></label>}
+</fieldset>
+<p><strong>@Ui.Money(Model.Room.Price)</strong> oda fiyatı / gece. Seçilen paket ücreti backend tarafından gece sayısıyla hesaplanıp toplam fiyata eklenir.</p>
 <button type="submit">Onaya gönder</button><small>Bu işlem ödeme almaz. Talep, resepsiyon onayından sonra kesinleşir.</small>
 </form><aside class="panel"><h2>Dolu tarih aralıkları</h2><p>Çıkış günü tekrar giriş yapılabilir; oda temizliği tamamlanmış olmalı.</p>
 @if(Model.Busy.Count==0){<p>Gelecek tarihlerde kesinleşmiş rezervasyon yok.</p>}

@@ -8,5 +8,6 @@
 <div class="form-grid"><label>Giriş<input asp-for="Input.CheckInDate" type="date" required /></label><label>Çıkış<input asp-for="Input.CheckOutDate" type="date" required /></label></div>
 <label>Misafir sayısı<input asp-for="Input.GuestCount" type="number" min="1" max="20" required /></label>
 <label>Ad soyad<input asp-for="Input.GuestName" required maxlength="100" /></label><label>Telefon<input asp-for="Input.GuestPhone" required minlength="7" maxlength="30" /></label>
+<label>Konaklama paketi<select asp-for="Input.StayPackageId" required><option value="">Seçin</option>@foreach(var package in Model.Packages){<option value="@package.Id">@package.Name · @(package.PricePerNight==0?"Dahil":$"+{Ui.Money(package.PricePerNight)} / gece")</option>}</select></label>
 <button type="submit">Talebi oluştur</button>
 </form>

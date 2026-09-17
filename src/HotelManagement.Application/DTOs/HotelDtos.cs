@@ -37,11 +37,23 @@ public class BulkRoomInput
 public class BookingInput
 {
     public Guid RoomId { get; set; }
+    public Guid StayPackageId { get; set; }
     public DateOnly CheckInDate { get; set; }
     public DateOnly CheckOutDate { get; set; }
     [Range(1,20)] public int GuestCount { get; set; } = 1;
     [Required, StringLength(100)] public string GuestName { get; set; } = "";
     [Required, StringLength(30, MinimumLength = 7)] public string GuestPhone { get; set; } = "";
+}
+
+public class StayPackageInput
+{
+    public Guid Id { get; set; }
+    [Required, StringLength(80)] public string Name { get; set; } = "";
+    [Required, StringLength(600)] public string Description { get; set; } = "";
+    [Required, StringLength(1200)] public string Benefits { get; set; } = "";
+    [Range(typeof(decimal), "0", "1000000")] public decimal PricePerNight { get; set; }
+    [Range(0, 999)] public int SortOrder { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 public class ReviewInput
@@ -64,10 +76,17 @@ public record RoomTypeDto(Guid Id, string Name, string Description, decimal Base
     bool IsFeatured, int FeaturedOrder, IReadOnlyList<RoomImageDto> Images);
 public record RoomDto(Guid Id, string Number, int Floor, Guid RoomTypeId, string TypeName,
     decimal Price, int Capacity, RoomStatus Status, bool IsActive);
+public record StayPackageDto(Guid Id, string Name, string Description, string Benefits,
+    decimal PricePerNight, bool IsActive, int SortOrder);
 public record BusyPeriod(DateOnly Start, DateOnly End);
 public record ReservationDto(Guid Id, string Code, Guid CustomerId, string RoomNumber, string TypeName,
     DateOnly CheckInDate, DateOnly CheckOutDate, int GuestCount, string GuestName, string GuestPhone,
-    decimal TotalPrice, ReservationStatus Status, bool HasReview);
+    decimal TotalPrice, ReservationStatus Status, bool HasReview, Guid? StayPackageId, string PackageName,
+    string PackageDescription, string PackageBenefits, decimal NightlyPrice, decimal PackagePricePerNight,
+    decimal RoomSubtotal, decimal PackageSubtotal);
+public record ReservationEventDto(Guid Id, ReservationStatus Status, string Title, string Description,
+    string Actor, DateTime CreatedAtUtc);
+public record ReservationDetailsDto(ReservationDto Reservation, IReadOnlyList<ReservationEventDto> Events);
 public record ReviewDto(Guid Id, Guid RoomTypeId, string TypeName, int Rating, string Comment, bool IsApproved, DateTime CreatedAtUtc);
 public record JobDto(Guid Id, Guid RoomId, string RoomNumber, JobKind Kind, string Description,
     DateTime CreatedAtUtc, DateTime? CompletedAtUtc, string? CompletedBy);

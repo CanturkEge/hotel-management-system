@@ -18,8 +18,9 @@ public class BookingsController(IHotelService hotel,IHotelClock clock) : Control
     {
         var room=(await hotel.RoomsAsync()).FirstOrDefault(x=>x.Id==roomId);
         if(room==null) return NotFound();
-        return View(new BookingPage{Room=room,Busy=await hotel.BusyAsync(roomId),Input=new BookingInput{RoomId=roomId,
-            CheckInDate=start??clock.Today,CheckOutDate=end??clock.Today.AddDays(1),GuestCount=guests}});
+        var packages=await hotel.PackagesAsync();
+        return View(new BookingPage{Room=room,Busy=await hotel.BusyAsync(roomId),Packages=packages,Input=new BookingInput{RoomId=roomId,
+            StayPackageId=packages.FirstOrDefault()?.Id??Guid.Empty,CheckInDate=start??clock.Today,CheckOutDate=end??clock.Today.AddDays(1),GuestCount=guests}});
     }
     [HttpPost]
     public async Task<IActionResult> Create(BookingPage page)
@@ -27,15 +28,20 @@ public class BookingsController(IHotelService hotel,IHotelClock clock) : Control
         // Room/Busy are display-only, populated server-side after validation.
         ModelState.Remove(nameof(page.Room));
         if(ModelState.IsValid)
-            try {await hotel.BookAsync(CustomerId,page.Input);TempData["Success"]="Talebiniz resepsiyon onayına gönderildi.";return RedirectToAction(nameof(Index));}
+            try {await hotel.BookAsync(CustomerId,page.Input,User.Identity?.Name??"Müşteri");TempData["Success"]="Talebiniz resepsiyon onayına gönderildi.";return RedirectToAction(nameof(Index));}
             catch(AppException ex){ModelState.AddModelError("",ex.Message);}
         var room=(await hotel.RoomsAsync()).FirstOrDefault(x=>x.Id==page.Input.RoomId);
         if(room==null) return NotFound();
-        page.Room=room;page.Busy=await hotel.BusyAsync(room.Id);return View(page);
+        page.Room=room;page.Busy=await hotel.BusyAsync(room.Id);page.Packages=await hotel.PackagesAsync();return View(page);
+    }
+    [HttpGet] public async Task<IActionResult> Details(Guid id)
+    {
+        try{return View(await hotel.BookingDetailsAsync(id,CustomerId));}
+        catch(AppException){return NotFound();}
     }
     [HttpPost] public async Task<IActionResult> Cancel(Guid id)
     {
-        try {await hotel.ChangeBookingAsync(id,ReservationStatus.Cancelled,CustomerId);TempData["Success"]="Rezervasyon iptal edildi.";}
+        try {await hotel.ChangeBookingAsync(id,ReservationStatus.Cancelled,CustomerId,User.Identity?.Name??"Müşteri");TempData["Success"]="Rezervasyon iptal edildi.";}
         catch(AppException ex){TempData["Error"]=ex.Message;}
         return RedirectToAction(nameof(Index));
     }

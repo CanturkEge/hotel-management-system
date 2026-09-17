@@ -20,6 +20,7 @@ public class StaffController(IHotelService hotel,IAccountService accounts,IHotel
     [Authorize(Roles=Roles.Desk),HttpGet]
     public async Task<IActionResult> Create()=>View(new StaffBookingPage {Rooms=await hotel.RoomsAsync(),
         Customers=(await accounts.UsersAsync()).Where(x=>x.Role==Roles.Customer).ToList(),
+        Packages=await hotel.PackagesAsync(),
         Input=new BookingInput{CheckInDate=clock.Today,CheckOutDate=clock.Today.AddDays(1)}});
     [Authorize(Roles=Roles.Desk),HttpPost]
     public async Task<IActionResult> Create(StaffBookingPage page)
@@ -27,14 +28,20 @@ public class StaffController(IHotelService hotel,IAccountService accounts,IHotel
         page.Customers=(await accounts.UsersAsync()).Where(x=>x.Role==Roles.Customer).ToList();
         if(!page.Customers.Any(x=>x.Id==page.CustomerId))ModelState.AddModelError("","Bir müşteri hesabı seçin.");
         if(ModelState.IsValid)
-            try {await hotel.BookAsync(page.CustomerId,page.Input);TempData["Success"]="Müşteri adına talep açıldı. Listeden onaylayabilirsiniz.";return RedirectToAction(nameof(Reservations));}
+            try {await hotel.BookAsync(page.CustomerId,page.Input,$"Resepsiyon · {User.Identity?.Name??"Personel"}");TempData["Success"]="Müşteri adına talep açıldı. Listeden onaylayabilirsiniz.";return RedirectToAction(nameof(Reservations));}
             catch(AppException ex){ModelState.AddModelError("",ex.Message);}
-        page.Rooms=await hotel.RoomsAsync();return View(page);
+        page.Rooms=await hotel.RoomsAsync();page.Packages=await hotel.PackagesAsync();return View(page);
+    }
+    [Authorize(Roles=Roles.Desk),HttpGet]
+    public async Task<IActionResult> ReservationDetails(Guid id)
+    {
+        try{return View("~/Views/Bookings/Details.cshtml",await hotel.BookingDetailsAsync(id));}
+        catch(AppException){return NotFound();}
     }
     [Authorize(Roles=Roles.Desk),HttpPost]
     public async Task<IActionResult> Transition(Guid id,ReservationStatus target)
     {
-        try {await hotel.ChangeBookingAsync(id,target);TempData["Success"]="Rezervasyon güncellendi.";}
+        try {await hotel.ChangeBookingAsync(id,target,null,$"Personel · {User.Identity?.Name??"Personel"}");TempData["Success"]="Rezervasyon güncellendi.";}
         catch(AppException ex){TempData["Error"]=ex.Message;}
         return RedirectToAction(nameof(Reservations));
     }

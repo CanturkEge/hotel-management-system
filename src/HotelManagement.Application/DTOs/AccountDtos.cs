@@ -6,6 +6,7 @@ public class LoginInput
     [Required, EmailAddress] public string Email { get; set; } = "";
     [Required, DataType(DataType.Password)] public string Password { get; set; } = "";
     public bool Staff { get; set; }
+    [StringLength(2048)] public string? ReturnUrl { get; set; }
 }
 public class RegisterInput
 {

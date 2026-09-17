@@ -10,6 +10,22 @@ namespace HotelManagement.Web.Controllers;
 [Authorize(Roles=Roles.Managers)]
 public class ManagementController(IHotelService hotel,IContentService content):Controller
 {
+    public async Task<IActionResult> Packages()=>View(await hotel.PackagesAsync(true));
+    [HttpGet] public async Task<IActionResult> EditPackage(Guid? id)
+    {
+        if(id==null)return View(new StayPackageInput());
+        var item=(await hotel.PackagesAsync(true)).FirstOrDefault(x=>x.Id==id);
+        if(item==null)return NotFound();
+        return View(new StayPackageInput {Id=item.Id,Name=item.Name,Description=item.Description,Benefits=item.Benefits,
+            PricePerNight=item.PricePerNight,SortOrder=item.SortOrder,IsActive=item.IsActive});
+    }
+    [HttpPost] public async Task<IActionResult> EditPackage(StayPackageInput input)
+    {
+        if(ModelState.IsValid)
+            try {await hotel.SavePackageAsync(input);TempData["Success"]="Konaklama paketi kaydedildi.";return RedirectToAction(nameof(Packages));}
+            catch(AppException ex){ModelState.AddModelError("",ex.Message);}
+        return View(input);
+    }
     public async Task<IActionResult> Types()=>View(await hotel.TypesAsync(true));
     [HttpGet] public async Task<IActionResult> EditType(Guid? id)
     {

@@ -8,8 +8,8 @@ Türkçe müşteri sitesi ve personel panelleri aynı Razor/CSS tasarımını ku
 Bu paket yeni bir başlangıç sürümüdür. Eski HotelPractice/SQLite veritabanına uygulanmaz.
 Mevcut klasörünüzü silmeyin; ZIP'i ayrı bir klasöre çıkarın. İlk kurulum için KURULUM.md'yi izleyin.
 
-**Doğrulama durumu (14.09.2026):** proje Linux/.NET 10 ortamında başarıyla derlendi ve
-25 iş kuralı testi geçti. İlk EF Core migration'ı üretildi ve Supabase PostgreSQL üzerinde uygulandı.
+**Doğrulama durumu (17.09.2026):** proje Linux/.NET 10 ortamında başarıyla derlendi ve
+35 iş kuralı testi geçti. EF Core migration SQL'i Supabase PostgreSQL üzerinde geri alınan işlemle doğrulandı.
 Gerçek giriş, yetki ve tarayıcı akışları `TESTLER.md` listesinden ayrıca doğrulanmalıdır.
 
 ## Dahil
@@ -23,8 +23,10 @@ Gerçek giriş, yetki ve tarayıcı akışları `TESTLER.md` listesinden ayrıca
 - JPEG/PNG/WebP/AVIF imza kontrolü, 5 MB dosya sınırı ve kalıcı PostgreSQL medya saklama.
 - Fiziksel oda ekleme/düzenleme/satıştan kaldırma; ardışık numaralarla tek seferde 100 odaya kadar toplu ekleme. Geçmiş kayıtlar korunur.
 - Tarih/kişi ile müsaitlik arama; seçilen oda için dolu tarih aralıkları.
+- Oda seçiminden sonra Standart, Gold veya Premium konaklama paketi; yönetici tarafından paket/fiyat düzenleme.
 - Müşteri talebi veya resepsiyonun müşteri adına talebi; onay/ret, iptal, check-in/check-out.
-- Sunucuda fiyat hesaplama, fiyat/oda tipi/oda numarası geçmiş anlık görüntüleri.
+- Sunucuda oda + paket fiyat hesaplama; fiyat, paket, oda tipi ve oda numarası geçmiş anlık görüntüleri.
+- Müşteri ve personel için ücret dökümü ile aktör/tarih içeren rezervasyon detay ve işlem geçmişi.
 - Konaklama geçmişi; tamamlanan konaklamaya tek yorum; yönetici yayın onayı.
 - Çıkış sonrası temizlik görevi; bakım bildirimi; rol bazlı görev tamamlama.
 - Açık temizlik/bakım görevleri varken oda rezervasyona kapalı.

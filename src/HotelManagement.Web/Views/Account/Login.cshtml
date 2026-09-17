@@ -4,6 +4,7 @@
 <form asp-action="Login" method="post" class="panel form-stack">
 <div asp-validation-summary="All" class="validation" role="alert"></div>
 <input asp-for="Staff" type="hidden" />
+<input asp-for="ReturnUrl" type="hidden" />
 <label asp-for="Email">E-posta</label><input asp-for="Email" type="email" autocomplete="username" required />
 <label asp-for="Password">Şifre</label><input asp-for="Password" autocomplete="current-password" required />
 <button type="submit">Giriş yap</button>

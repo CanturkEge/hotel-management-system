@@ -11,6 +11,8 @@ public sealed class HotelDbContext(DbContextOptions<HotelDbContext> options) : I
     public DbSet<RoomType> RoomTypes => Set<RoomType>();
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<ReservationEvent> ReservationEvents => Set<ReservationEvent>();
+    public DbSet<StayPackage> StayPackages => Set<StayPackage>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<RoomJob> RoomJobs => Set<RoomJob>();
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
@@ -69,6 +71,12 @@ public sealed class HotelDbContext(DbContextOptions<HotelDbContext> options) : I
             e.HasOne(x=>x.RoomType).WithMany().HasForeignKey(x=>x.RoomTypeId).OnDelete(DeleteBehavior.Restrict);
             e.Navigation(x=>x.RoomType).AutoInclude();
         });
+        b.Entity<StayPackage>(e=> {
+            e.Property(x=>x.Name).HasMaxLength(80); e.HasIndex(x=>x.Name).IsUnique();
+            e.Property(x=>x.Description).HasMaxLength(600); e.Property(x=>x.Benefits).HasMaxLength(1200);
+            e.Property(x=>x.PricePerNight).HasPrecision(12,2); e.HasIndex(x=>new{x.IsActive,x.SortOrder});
+            e.ToTable("StayPackages",t=>t.HasCheckConstraint("CK_StayPackage_Values","\"PricePerNight\" >= 0 AND \"SortOrder\" >= 0"));
+        });
         b.Entity<Reservation>(e=> {
             e.HasIndex(x=>x.Code).IsUnique(); e.Property(x=>x.Code).HasMaxLength(32);
             e.HasIndex(x=>new{x.RoomId,x.Status,x.CheckInDate,x.CheckOutDate});
@@ -76,12 +84,20 @@ public sealed class HotelDbContext(DbContextOptions<HotelDbContext> options) : I
             e.Property(x=>x.GuestName).HasMaxLength(100); e.Property(x=>x.GuestPhone).HasMaxLength(30);
             e.Property(x=>x.Currency).HasMaxLength(3);
             e.Property(x=>x.RoomTypeName).HasMaxLength(100); e.Property(x=>x.RoomNumber).HasMaxLength(12);
-            e.Property(x=>x.NightlyPrice).HasPrecision(12,2); e.Property(x=>x.TotalPrice).HasPrecision(14,2);
+            e.Property(x=>x.PackageName).HasMaxLength(80); e.Property(x=>x.PackageDescription).HasMaxLength(600); e.Property(x=>x.PackageBenefits).HasMaxLength(1200);
+            e.Property(x=>x.NightlyPrice).HasPrecision(12,2); e.Property(x=>x.PackagePricePerNight).HasPrecision(12,2);
+            e.Property(x=>x.RoomSubtotal).HasPrecision(14,2); e.Property(x=>x.PackageSubtotal).HasPrecision(14,2); e.Property(x=>x.TotalPrice).HasPrecision(14,2);
             e.HasOne(x=>x.Room).WithMany().HasForeignKey(x=>x.RoomId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<RoomType>().WithMany().HasForeignKey(x=>x.RoomTypeId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x=>x.StayPackage).WithMany().HasForeignKey(x=>x.StayPackageId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<AppUser>().WithMany().HasForeignKey(x=>x.CustomerId).OnDelete(DeleteBehavior.Restrict);
             e.Navigation(x=>x.Room).AutoInclude();
-            e.ToTable("Reservations",t=>t.HasCheckConstraint("CK_Reservation_Values", "\"CheckOutDate\" > \"CheckInDate\" AND \"GuestCount\" > 0 AND \"TotalPrice\" >= 0"));
+            e.ToTable("Reservations",t=>t.HasCheckConstraint("CK_Reservation_Values", "\"CheckOutDate\" > \"CheckInDate\" AND \"GuestCount\" > 0 AND \"NightlyPrice\" >= 0 AND \"PackagePricePerNight\" >= 0 AND \"RoomSubtotal\" >= 0 AND \"PackageSubtotal\" >= 0 AND \"TotalPrice\" = \"RoomSubtotal\" + \"PackageSubtotal\""));
+        });
+        b.Entity<ReservationEvent>(e=> {
+            e.Property(x=>x.Title).HasMaxLength(120); e.Property(x=>x.Description).HasMaxLength(600); e.Property(x=>x.Actor).HasMaxLength(120);
+            e.HasIndex(x=>new{x.ReservationId,x.CreatedAtUtc});
+            e.HasOne(x=>x.Reservation).WithMany(x=>x.Events).HasForeignKey(x=>x.ReservationId).OnDelete(DeleteBehavior.Cascade);
         });
         b.Entity<Review>(e=> {
             e.HasIndex(x=>x.ReservationId).IsUnique(); e.Property(x=>x.Comment).HasMaxLength(1500);

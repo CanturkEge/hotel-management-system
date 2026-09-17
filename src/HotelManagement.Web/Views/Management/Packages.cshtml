@@ -1,0 +1,7 @@
+@model List<StayPackageDto>
+@{ViewData["Title"]="Konaklama paketleri";}
+<div class="section-heading"><div><p class="eyebrow">ÜYELİK AYRICALIKLARI</p><h1>Konaklama paketleri</h1></div><a class="button" asp-action="EditPackage">Paket ekle</a></div>
+<p>Müşteri oda seçtikten sonra aktif paketlerden birini seçer. Paket ücreti gecelik oda fiyatına eklenir ve rezervasyona anlık görüntü olarak kaydedilir.</p>
+<div class="table-scroll"><table><thead><tr><th>Paket</th><th>Gecelik ek ücret</th><th>Avantajlar</th><th>Sıra</th><th>Durum</th><th></th></tr></thead><tbody>
+@foreach(var package in Model){<tr><td><strong>@package.Name</strong><small>@package.Description</small></td><td>@(package.PricePerNight==0?"Dahil":Ui.Money(package.PricePerNight))</td><td class="prewrap">@package.Benefits</td><td>@package.SortOrder</td><td><span class="badge">@(package.IsActive?"Aktif":"Pasif")</span></td><td><a asp-action="EditPackage" asp-route-id="@package.Id">Düzenle</a></td></tr>}
+</tbody></table></div>

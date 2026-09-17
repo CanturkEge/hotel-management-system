@@ -40,7 +40,7 @@
     var progress=r.Status switch {ReservationStatus.Pending=>1,ReservationStatus.Confirmed=>2,ReservationStatus.CheckedIn=>3,ReservationStatus.CheckedOut=>4,_=>0};
     <article class="booking-card-v2">
         <header><div><span class="badge">@Ui.Status(r.Status)</span><p class="booking-code">REZERVASYON · @r.Code</p><h2>@r.TypeName <span>Oda @r.RoomNumber</span></h2></div><div class="booking-total"><small>TOPLAM</small><strong>@Ui.Money(r.TotalPrice)</strong></div></header>
-        <div class="booking-facts"><div><small>GİRİŞ</small><strong>@Ui.Date(r.CheckInDate)</strong></div><div><small>ÇIKIŞ</small><strong>@Ui.Date(r.CheckOutDate)</strong></div><div><small>KONAKLAMA</small><strong>@(r.CheckOutDate.DayNumber-r.CheckInDate.DayNumber) gece · @r.GuestCount misafir</strong></div><div><small>MİSAFİR</small><strong>@r.GuestName</strong></div></div>
+        <div class="booking-facts"><div><small>GİRİŞ</small><strong>@Ui.Date(r.CheckInDate)</strong></div><div><small>ÇIKIŞ</small><strong>@Ui.Date(r.CheckOutDate)</strong></div><div><small>KONAKLAMA</small><strong>@(r.CheckOutDate.DayNumber-r.CheckInDate.DayNumber) gece · @r.GuestCount misafir</strong></div><div><small>PAKET</small><strong>@r.PackageName</strong></div></div>
         @if(progress>0)
         {
             <div class="booking-progress" aria-label="Rezervasyon durumu">
@@ -57,6 +57,7 @@
         <footer class="booking-actions">
             <div><small>İLETİŞİM</small><span>@r.GuestPhone</span></div>
             <div class="actions">
+            <a class="button small secondary" asp-action="Details" asp-route-id="@r.Id">Detaylar</a>
             @if(r.Status is ReservationStatus.Pending or ReservationStatus.Confirmed)
             {<form asp-action="Cancel" method="post" data-confirm="Rezervasyon iptal edilsin mi?"><input type="hidden" name="id" value="@r.Id" /><button class="danger small" type="submit">Rezervasyonu iptal et</button></form>}
             @if(r.Status==ReservationStatus.CheckedOut&&!r.HasReview)

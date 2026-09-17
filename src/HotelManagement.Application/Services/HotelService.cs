@@ -10,7 +10,8 @@ namespace HotelManagement.Application.Services;
 
 public sealed class HotelService(
     IRepository<RoomType> types, IRepository<Room> rooms, IRepository<Reservation> reservations,
-    IRepository<Review> reviews, IRepository<RoomJob> jobs, IUnitOfWork unit, IHotelClock clock) : IHotelService
+    IRepository<Review> reviews, IRepository<RoomJob> jobs, IRepository<StayPackage> packages,
+    IRepository<ReservationEvent> reservationEvents, IUnitOfWork unit, IHotelClock clock) : IHotelService
 {
     // PostgreSQL transaction lock: all hotel writes use the same lock, even across server instances.
     // Simple correctness-first design for one hotel. Split into room-level locks when scaling.
@@ -117,18 +118,45 @@ public sealed class HotelService(
             (r.Status==ReservationStatus.Confirmed || r.Status==ReservationStatus.CheckedIn)))
             .OrderBy(r=>r.CheckInDate).Select(r=>new BusyPeriod(r.CheckInDate,r.CheckOutDate)).ToList();
 
-    public Task<Guid> BookAsync(Guid customerId, BookingInput input) => Write(async () =>
+    public async Task<List<StayPackageDto>> PackagesAsync(bool includeInactive=false)
+        => (await packages.ListAsync(x=>includeInactive || x.IsActive)).OrderBy(x=>x.SortOrder).ThenBy(x=>x.PricePerNight).Select(x=>x.ToDto()).ToList();
+
+    public Task<Guid> SavePackageAsync(StayPackageInput input) => Write(async () =>
+    {
+        Validate(input);
+        var normalized=input.Name.Trim();
+        if((await packages.ListAsync()).Any(x=>x.Id!=input.Id && x.Name.Equals(normalized,StringComparison.OrdinalIgnoreCase)))
+            throw new AppException("Bu paket adı zaten kullanılıyor.");
+        var item=input.Id==Guid.Empty ? new StayPackage() : await packages.GetAsync(input.Id) ?? throw new AppException("Paket bulunamadı.");
+        if(input.Id!=Guid.Empty && !input.IsActive && await reservations.AnyAsync(r=>r.StayPackageId==input.Id && r.CheckOutDate>clock.Today &&
+            (r.Status==ReservationStatus.Pending || r.Status==ReservationStatus.Confirmed || r.Status==ReservationStatus.CheckedIn)))
+            throw new AppException("Aktif rezervasyonlarda kullanılan paket kapatılamaz.");
+        item.Name=normalized; item.Description=input.Description.Trim(); item.Benefits=input.Benefits.Trim();
+        item.PricePerNight=input.PricePerNight; item.SortOrder=input.SortOrder; item.IsActive=input.IsActive;
+        if(input.Id==Guid.Empty) packages.Add(item);
+        return item.Id;
+    });
+
+    public Task<Guid> BookAsync(Guid customerId, BookingInput input, string actor="Müşteri") => Write(async () =>
     {
         Validate(input); ValidateDates(input.CheckInDate,input.CheckOutDate,input.GuestCount);
         var room=await rooms.GetAsync(input.RoomId) ?? throw new AppException("Oda bulunamadı.");
+        var package=await packages.GetAsync(input.StayPackageId) ?? throw new AppException("Konaklama paketi seçin.");
+        if(!package.IsActive) throw new AppException("Seçilen paket artık kullanılamıyor.");
         await EnsureBookable(room,input.CheckInDate,input.CheckOutDate,input.GuestCount);
         if(await reservations.AnyAsync(r=>r.CustomerId==customerId && r.RoomId==input.RoomId && r.Status==ReservationStatus.Pending
             && r.CheckInDate==input.CheckInDate && r.CheckOutDate==input.CheckOutDate))
             throw new AppException("Bu tarihler için zaten bekleyen talebiniz var.");
+        var roomSubtotal=BookingRules.Total(input.CheckInDate,input.CheckOutDate,room.RoomType.BasePrice);
+        var packageSubtotal=BookingRules.Total(input.CheckInDate,input.CheckOutDate,package.PricePerNight);
         var booking=new Reservation { CustomerId=customerId,RoomId=input.RoomId,RoomTypeId=room.RoomTypeId,RoomTypeName=room.RoomType.Name,RoomNumber=room.Number,CheckInDate=input.CheckInDate,CheckOutDate=input.CheckOutDate,
             GuestCount=input.GuestCount,GuestName=input.GuestName.Trim(),GuestPhone=input.GuestPhone.Trim(),NightlyPrice=room.RoomType.BasePrice,
-            TotalPrice=BookingRules.Total(input.CheckInDate,input.CheckOutDate,room.RoomType.BasePrice) };
-        reservations.Add(booking); return booking.Id;
+            StayPackageId=package.Id,PackageName=package.Name,PackageDescription=package.Description,PackageBenefits=package.Benefits,PackagePricePerNight=package.PricePerNight,
+            RoomSubtotal=roomSubtotal,PackageSubtotal=packageSubtotal,TotalPrice=roomSubtotal+packageSubtotal };
+        reservations.Add(booking);
+        reservationEvents.Add(new ReservationEvent {ReservationId=booking.Id,Status=booking.Status,Title="Rezervasyon talebi oluşturuldu",
+            Description=$"Oda {booking.RoomNumber} ve {booking.PackageName} paketi seçildi.",Actor=CleanActor(actor)});
+        return booking.Id;
     });
     public async Task<List<ReservationDto>> BookingsAsync(Guid? customerId=null)
     {
@@ -136,7 +164,15 @@ public sealed class HotelService(
         return (await reservations.ListAsync(r=>customerId==null || r.CustomerId==customerId)).OrderByDescending(r=>r.CreatedAtUtc)
             .Select(r=>r.ToDto(reviewed.Contains(r.Id))).ToList();
     }
-    public Task ChangeBookingAsync(Guid id, ReservationStatus target, Guid? customerId=null) => Write(async () =>
+    public async Task<ReservationDetailsDto> BookingDetailsAsync(Guid id,Guid? customerId=null)
+    {
+        var booking=await reservations.GetAsync(id) ?? throw new AppException("Rezervasyon bulunamadı.");
+        if(customerId!=null && booking.CustomerId!=customerId) throw new AppException("Bu rezervasyonu görüntüleme yetkiniz yok.");
+        var reviewed=await reviews.AnyAsync(r=>r.ReservationId==id);
+        var history=(await reservationEvents.ListAsync(x=>x.ReservationId==id)).OrderBy(x=>x.CreatedAtUtc).Select(x=>x.ToDto()).ToList();
+        return new(booking.ToDto(reviewed),history);
+    }
+    public Task ChangeBookingAsync(Guid id, ReservationStatus target, Guid? customerId=null,string actor="Sistem") => Write(async () =>
     {
         var booking=await reservations.GetAsync(id) ?? throw new AppException("Rezervasyon bulunamadı.");
         if(customerId!=null && (booking.CustomerId!=customerId || target!=ReservationStatus.Cancelled)) throw new AppException("Bu işlem için yetkiniz yok.");
@@ -171,8 +207,24 @@ public sealed class HotelService(
                 break;
             default: throw new AppException("Geçersiz durum geçişi.");
         }
-        booking.Status=target; return true;
+        booking.Status=target;
+        reservationEvents.Add(new ReservationEvent {ReservationId=booking.Id,Status=target,Title=EventTitle(target),
+            Description=EventDescription(target),Actor=CleanActor(actor)});
+        return true;
     });
+
+    private static string CleanActor(string actor)=>string.IsNullOrWhiteSpace(actor)?"Sistem":actor.Trim()[..Math.Min(actor.Trim().Length,120)];
+    private static string EventTitle(ReservationStatus status)=>status switch {
+        ReservationStatus.Confirmed=>"Rezervasyon onaylandı",ReservationStatus.Rejected=>"Rezervasyon reddedildi",
+        ReservationStatus.Cancelled=>"Rezervasyon iptal edildi",ReservationStatus.CheckedIn=>"Otele giriş yapıldı",
+        ReservationStatus.CheckedOut=>"Konaklama tamamlandı",_=>"Rezervasyon güncellendi"};
+    private static string EventDescription(ReservationStatus status)=>status switch {
+        ReservationStatus.Confirmed=>"Talep resepsiyon tarafından onaylandı ve oda kesinleştirildi.",
+        ReservationStatus.Rejected=>"Rezervasyon talebi resepsiyon tarafından reddedildi.",
+        ReservationStatus.Cancelled=>"Rezervasyon iptal edilerek oda yeniden müsait hale getirildi.",
+        ReservationStatus.CheckedIn=>"Misafirin giriş işlemi tamamlandı ve oda dolu durumuna alındı.",
+        ReservationStatus.CheckedOut=>"Çıkış işlemi tamamlandı ve oda temizlik sırasına alındı.",
+        _=>"Rezervasyon durumu güncellendi."};
 
     public Task ReviewAsync(Guid customerId, ReviewInput input) => Write(async () =>
     {

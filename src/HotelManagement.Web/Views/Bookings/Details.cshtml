@@ -1,0 +1,18 @@
+@model ReservationDetailsDto
+@{
+    ViewData["Title"]="Rezervasyon detayları";
+    var r=Model.Reservation;
+    var nights=r.CheckOutDate.DayNumber-r.CheckInDate.DayNumber;
+    var isCustomer=User.IsInRole(Roles.Customer);
+}
+<a class="back-link" asp-controller="@(isCustomer?"Bookings":"Staff")" asp-action="@(isCustomer?"Index":"Reservations")">← Rezervasyonlara dön</a>
+<div class="section-heading"><div><p class="eyebrow">REZERVASYON · @r.Code</p><h1>@r.TypeName · Oda @r.RoomNumber</h1></div><span class="badge">@Ui.Status(r.Status)</span></div>
+<div class="detail-grid">
+    <section class="panel"><p class="eyebrow">KONAKLAMA</p><h2>@Ui.Date(r.CheckInDate) — @Ui.Date(r.CheckOutDate)</h2><p>@nights gece · @r.GuestCount misafir</p><p><strong>@r.GuestName</strong><br />@r.GuestPhone</p></section>
+    <section class="panel package-highlight"><p class="eyebrow">SEÇİLEN PAKET</p><h2>@r.PackageName</h2><p>@r.PackageDescription</p><p class="prewrap">@r.PackageBenefits</p></section>
+    <section class="panel"><p class="eyebrow">ÜCRET AYRINTISI</p><div class="price-detail"><span>Oda · @nights gece</span><strong>@Ui.Money(r.RoomSubtotal)</strong><span>@r.PackageName · @nights gece</span><strong>@Ui.Money(r.PackageSubtotal)</strong><span>Genel toplam</span><strong>@Ui.Money(r.TotalPrice)</strong></div></section>
+</div>
+<section class="panel reservation-history"><p class="eyebrow">İŞLEM GEÇMİŞİ</p><h2>Rezervasyonda neler oldu?</h2>
+@if(Model.Events.Count==0){<p class="empty">Bu eski rezervasyon için henüz işlem geçmişi bulunmuyor.</p>}
+<ol class="timeline">@foreach(var item in Model.Events){<li><span class="timeline-dot"></span><div><small>@item.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm") · @item.Actor</small><h3>@item.Title</h3><p>@item.Description</p><span class="badge">@Ui.Status(item.Status)</span></div></li>}</ol>
+</section>
