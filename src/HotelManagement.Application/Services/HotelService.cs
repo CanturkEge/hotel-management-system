@@ -189,7 +189,6 @@ public sealed class HotelService(
                 break;
             case ReservationStatus.Cancelled:
                 if(booking.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed)) throw new AppException("Bu rezervasyon iptal edilemez.");
-                if(customerId!=null && booking.CheckInDate<=clock.Today) throw new AppException("Giriş günü iptal için resepsiyona başvurun.");
                 break;
             case ReservationStatus.CheckedIn:
                 if(booking.Status!=ReservationStatus.Confirmed || clock.Today<booking.CheckInDate || clock.Today>=booking.CheckOutDate)

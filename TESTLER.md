@@ -4,7 +4,7 @@
 
 - Kaynak dosyaları, proje referansları, yapılandırma JSON/XML, controller/view bağlantıları statik incelendi.
 - JavaScript için `node --check` çalıştırıldı.
-- Linux/.NET 10 ortamında C# / Razor derlemesi ve 35 iş kuralı testi başarıyla çalıştırıldı.
+- Linux/.NET 10 ortamında C# / Razor derlemesi ve 37 iş kuralı testi başarıyla çalıştırıldı.
 - PostgreSQL migration SQL'i canlı şemada `BEGIN/ROLLBACK` işlemiyle hatasız doğrulandı; gerçek Identity ve tarayıcı akışları ayrıca kontrol edilmelidir.
 - Aşağıdaki adımları geçti demeden uygulamayı gerçek müşteriye yayınlamayın.
 
@@ -25,11 +25,11 @@ dotnet run --project tests/HotelManagement.Tests
 Testler bellek içi repository ile servis davranışlarını kontrol eder; PostgreSQL transaction,
 RLS, gerçek concurrency, Identity cookie, CSRF veya MVC model binding yerine geçmez.
 
-Kapsanan 35 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
+Kapsanan 37 senaryo: bitişik tarih aralığı, kesişen tarih, decimal toplam, pending kapasite,
 oda ve paket fiyat snapshot'ı, paketli toplam, pasif paket reddi, rezervasyon işlem geçmişi,
 detay sahipliği, geçmiş tarih, sıfır gece, kapasite aşımı, temizlik kilidi, açık bakım kilidi,
 tekrar pending istek, çifte onay kontrolü, onaysız check-in, checkout-temizlik,
-başkasının rezervasyonunu iptal, konaklamadan yorum, tek yorum, yorum sahipliği,
+giriş gününde pending/onaylı müşteri iptali, başkasının rezervasyonunu iptal, konaklamadan yorum, tek yorum, yorum sahipliği,
 yanlış görev rolü, bakım sürerken temizliğin odayı açmaması, tüm görevlerin bitmesi,
 aktif rezervasyonlu odayı arşivleme, ardışık toplu oda ekleme, toplu eklemede çakışmanın yarım kayıt
 bırakmadan reddedilmesi ve tarihsel oda etiketlerinin korunması.
