@@ -30,6 +30,12 @@ public class BookingPage
     [BindNever,ValidateNever] public List<BusyPeriod> Busy {get;set;}=[];
     [BindNever,ValidateNever] public List<StayPackageDto> Packages {get;set;}=[];
 }
+public class BookingEditPage
+{
+    public ReservationEditInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public List<RoomDto> Rooms {get;set;}=[];
+    [BindNever,ValidateNever] public List<StayPackageDto> Packages {get;set;}=[];
+}
 public class RoomEditPage
 {
     public RoomInput Input {get;set;}=new();
@@ -86,4 +92,14 @@ public class StaffBookingPage
     [BindNever,ValidateNever] public List<RoomDto> Rooms {get;set;}=[];
     [BindNever,ValidateNever] public List<AccountDto> Customers {get;set;}=[];
     [BindNever,ValidateNever] public List<StayPackageDto> Packages {get;set;}=[];
+}
+public class ExtraServicesPage
+{
+    public ExtraServiceInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public List<ExtraServiceDto> Items {get;set;}=[];
+}
+public class PromotionsPage
+{
+    public PromotionInput Input {get;set;}=new();
+    [BindNever,ValidateNever] public List<PromotionDto> Items {get;set;}=[];
 }

@@ -11,7 +11,9 @@ namespace HotelManagement.Application.Services;
 public sealed class HotelService(
     IRepository<RoomType> types, IRepository<Room> rooms, IRepository<Reservation> reservations,
     IRepository<Review> reviews, IRepository<RoomJob> jobs, IRepository<StayPackage> packages,
-    IRepository<ReservationEvent> reservationEvents, IUnitOfWork unit, IHotelClock clock) : IHotelService
+    IRepository<ReservationEvent> reservationEvents, IRepository<ExtraService> extraServices,
+    IRepository<ReservationExtra> reservationExtras, IRepository<Promotion> promotions,
+    IUnitOfWork unit, IHotelClock clock) : IHotelService
 {
     // PostgreSQL transaction lock: all hotel writes use the same lock, even across server instances.
     // Simple correctness-first design for one hotel. Split into room-level locks when scaling.
@@ -137,6 +139,66 @@ public sealed class HotelService(
         return item.Id;
     });
 
+    public async Task<List<ExtraServiceDto>> ExtraServicesAsync(bool includeInactive=false)
+        => (await extraServices.ListAsync(x=>includeInactive || x.IsActive)).OrderBy(x=>x.SortOrder).ThenBy(x=>x.Price).Select(x=>x.ToDto()).ToList();
+
+    public Task<Guid> SaveExtraServiceAsync(ExtraServiceInput input) => Write(async () =>
+    {
+        Validate(input); var normalized=input.Name.Trim();
+        if((await extraServices.ListAsync()).Any(x=>x.Id!=input.Id && x.Name.Equals(normalized,StringComparison.OrdinalIgnoreCase)))
+            throw new AppException("Bu hizmet adı zaten kullanılıyor.");
+        var item=input.Id==Guid.Empty?new ExtraService():await extraServices.GetAsync(input.Id)??throw new AppException("Ek hizmet bulunamadı.");
+        item.Name=normalized;item.Description=input.Description.Trim();item.Price=input.Price;item.SortOrder=input.SortOrder;item.IsActive=input.IsActive;
+        if(input.Id==Guid.Empty)extraServices.Add(item);return item.Id;
+    });
+
+    public async Task<List<PromotionDto>> PromotionsAsync(bool includeInactive=false)
+        => (await promotions.ListAsync(x=>includeInactive || x.IsActive)).OrderByDescending(x=>x.StartDate).ThenBy(x=>x.Code).Select(x=>x.ToDto()).ToList();
+
+    public Task<Guid> SavePromotionAsync(PromotionInput input) => Write(async () =>
+    {
+        Validate(input);
+        if(input.EndDate<input.StartDate)throw new AppException("Kampanya bitiş tarihi başlangıçtan önce olamaz.");
+        if(!Enum.IsDefined(input.Kind) || input.Kind==PromotionKind.Percentage && input.Value>100)
+            throw new AppException("Yüzde indirimi 100 değerini geçemez.");
+        var code=NormalizeCode(input.Code);
+        if((await promotions.ListAsync()).Any(x=>x.Id!=input.Id && x.Code==code))throw new AppException("Bu kampanya kodu zaten kullanılıyor.");
+        var item=input.Id==Guid.Empty?new Promotion():await promotions.GetAsync(input.Id)??throw new AppException("Kampanya bulunamadı.");
+        if(input.UsageLimit!=null&&input.UsageLimit<item.TimesUsed)throw new AppException("Kullanım limiti mevcut kullanım sayısından düşük olamaz.");
+        item.Code=code;item.Name=input.Name.Trim();item.Description=input.Description.Trim();item.Kind=input.Kind;item.Value=input.Value;
+        item.StartDate=input.StartDate;item.EndDate=input.EndDate;item.MinimumNights=input.MinimumNights;item.UsageLimit=input.UsageLimit;item.IsActive=input.IsActive;
+        if(input.Id==Guid.Empty)promotions.Add(item);return item.Id;
+    });
+
+    private static string NormalizeCode(string code)=>new(code.Trim().ToUpperInvariant().Where(char.IsLetterOrDigit).ToArray());
+    private static void EnsureEditable(Reservation booking,Guid? customerId,bool extras=false)
+    {
+        if(customerId!=null && booking.CustomerId!=customerId)throw new AppException("Bu rezervasyon için yetkiniz yok.");
+        var allowed=extras
+            ? booking.Status is ReservationStatus.Pending or ReservationStatus.Confirmed or ReservationStatus.CheckedIn
+            : booking.Status is ReservationStatus.Pending or ReservationStatus.Confirmed;
+        if(!allowed)throw new AppException(extras?"Bu rezervasyona artık hizmet eklenemez.":"Bu rezervasyon artık düzenlenemez.");
+    }
+    private static decimal PromotionDiscount(Promotion promotion,Reservation booking)
+    {
+        var before=booking.RoomSubtotal+booking.PackageSubtotal+booking.ServicesSubtotal;
+        var discount=promotion.Kind==PromotionKind.Percentage?decimal.Round(before*promotion.Value/100m,2):promotion.Value;
+        return Math.Min(before,discount);
+    }
+    private void ValidatePromotion(Promotion promotion,Reservation booking)
+    {
+        var nights=booking.CheckOutDate.DayNumber-booking.CheckInDate.DayNumber;
+        if(!promotion.IsActive || clock.Today<promotion.StartDate || clock.Today>promotion.EndDate)
+            throw new AppException("Kampanya şu anda geçerli değil.");
+        if(nights<promotion.MinimumNights)throw new AppException($"Bu kampanya en az {promotion.MinimumNights} gecelik konaklamalarda geçerli.");
+        if(promotion.UsageLimit!=null && promotion.TimesUsed>=promotion.UsageLimit)
+            throw new AppException("Kampanya kullanım limitine ulaştı.");
+    }
+    private static void Recalculate(Reservation booking)
+        => booking.TotalPrice=booking.RoomSubtotal+booking.PackageSubtotal+booking.ServicesSubtotal-booking.DiscountAmount;
+    private void AddEvent(Reservation booking,string title,string description,string actor)
+        => reservationEvents.Add(new ReservationEvent {ReservationId=booking.Id,Status=booking.Status,Title=title,Description=description,Actor=CleanActor(actor)});
+
     public Task<Guid> BookAsync(Guid customerId, BookingInput input, string actor="Müşteri") => Write(async () =>
     {
         Validate(input); ValidateDates(input.CheckInDate,input.CheckOutDate,input.GuestCount);
@@ -170,8 +232,73 @@ public sealed class HotelService(
         if(customerId!=null && booking.CustomerId!=customerId) throw new AppException("Bu rezervasyonu görüntüleme yetkiniz yok.");
         var reviewed=await reviews.AnyAsync(r=>r.ReservationId==id);
         var history=(await reservationEvents.ListAsync(x=>x.ReservationId==id)).OrderBy(x=>x.CreatedAtUtc).Select(x=>x.ToDto()).ToList();
-        return new(booking.ToDto(reviewed),history);
+        var extras=(await reservationExtras.ListAsync(x=>x.ReservationId==id)).OrderBy(x=>x.CreatedAtUtc).Select(x=>x.ToDto()).ToList();
+        var available=(await extraServices.ListAsync(x=>x.IsActive)).Where(x=>extras.All(e=>e.ExtraServiceId!=x.Id)).OrderBy(x=>x.SortOrder).ThenBy(x=>x.Price).Select(x=>x.ToDto()).ToList();
+        return new(booking.ToDto(reviewed),history,extras,available);
     }
+    public Task UpdateBookingAsync(ReservationEditInput input,Guid? customerId=null,string actor="Sistem") => Write(async () =>
+    {
+        Validate(input);ValidateDates(input.CheckInDate,input.CheckOutDate,input.GuestCount);
+        var booking=await reservations.GetAsync(input.Id)??throw new AppException("Rezervasyon bulunamadı.");EnsureEditable(booking,customerId);
+        var room=await rooms.GetAsync(input.RoomId)??throw new AppException("Oda bulunamadı.");
+        var package=await packages.GetAsync(input.StayPackageId)??throw new AppException("Konaklama paketi seçin.");
+        if(!package.IsActive)throw new AppException("Seçilen paket artık kullanılamıyor.");
+        await EnsureBookable(room,input.CheckInDate,input.CheckOutDate,input.GuestCount,booking.Id);
+        var old=$"Oda {booking.RoomNumber}, {booking.CheckInDate:dd.MM.yyyy}–{booking.CheckOutDate:dd.MM.yyyy}, {booking.PackageName}";
+        booking.RoomId=room.Id;booking.RoomTypeId=room.RoomTypeId;booking.RoomTypeName=room.RoomType.Name;booking.RoomNumber=room.Number;
+        booking.CheckInDate=input.CheckInDate;booking.CheckOutDate=input.CheckOutDate;booking.GuestCount=input.GuestCount;
+        booking.GuestName=input.GuestName.Trim();booking.GuestPhone=input.GuestPhone.Trim();booking.NightlyPrice=room.RoomType.BasePrice;
+        booking.StayPackageId=package.Id;booking.PackageName=package.Name;booking.PackageDescription=package.Description;booking.PackageBenefits=package.Benefits;booking.PackagePricePerNight=package.PricePerNight;
+        booking.RoomSubtotal=BookingRules.Total(input.CheckInDate,input.CheckOutDate,booking.NightlyPrice);
+        booking.PackageSubtotal=BookingRules.Total(input.CheckInDate,input.CheckOutDate,booking.PackagePricePerNight);
+        if(booking.PromotionId!=null)
+        {
+            var promotion=await promotions.GetAsync(booking.PromotionId.Value)??throw new AppException("Uygulanan kampanya bulunamadı.");
+            ValidatePromotion(promotion,booking);booking.DiscountAmount=PromotionDiscount(promotion,booking);
+        }
+        Recalculate(booking);
+        AddEvent(booking,"Rezervasyon güncellendi",$"{old} bilgileri; Oda {booking.RoomNumber}, {booking.CheckInDate:dd.MM.yyyy}–{booking.CheckOutDate:dd.MM.yyyy}, {booking.PackageName} olarak güncellendi.",actor);
+        return true;
+    });
+    public Task AddExtraAsync(Guid reservationId,Guid extraServiceId,int quantity,Guid? customerId=null,string actor="Sistem") => Write(async () =>
+    {
+        if(quantity is <1 or >10)throw new AppException("Hizmet adedi 1–10 olmalı.");
+        var booking=await reservations.GetAsync(reservationId)??throw new AppException("Rezervasyon bulunamadı.");EnsureEditable(booking,customerId,true);
+        var service=await extraServices.GetAsync(extraServiceId)??throw new AppException("Ek hizmet bulunamadı.");
+        if(!service.IsActive)throw new AppException("Bu hizmet şu anda kullanılamıyor.");
+        if(await reservationExtras.AnyAsync(x=>x.ReservationId==booking.Id&&x.ExtraServiceId==service.Id))throw new AppException("Bu hizmet rezervasyona zaten eklendi.");
+        var line=new ReservationExtra {ReservationId=booking.Id,ExtraServiceId=service.Id,ServiceName=service.Name,UnitPrice=service.Price,Quantity=quantity,TotalPrice=service.Price*quantity};
+        reservationExtras.Add(line);booking.ServicesSubtotal+=line.TotalPrice;
+        if(booking.PromotionId!=null){var p=await promotions.GetAsync(booking.PromotionId.Value);if(p!=null)booking.DiscountAmount=PromotionDiscount(p,booking);}
+        Recalculate(booking);AddEvent(booking,"Ek hizmet eklendi",$"{service.Name} · {quantity} adet · {line.TotalPrice:N2} TRY",actor);return true;
+    });
+    public Task RemoveExtraAsync(Guid reservationId,Guid reservationExtraId,Guid? customerId=null,string actor="Sistem") => Write(async () =>
+    {
+        var booking=await reservations.GetAsync(reservationId)??throw new AppException("Rezervasyon bulunamadı.");EnsureEditable(booking,customerId,true);
+        var line=await reservationExtras.GetAsync(reservationExtraId)??throw new AppException("Ek hizmet bulunamadı.");
+        if(line.ReservationId!=booking.Id)throw new AppException("Ek hizmet bu rezervasyona ait değil.");
+        reservationExtras.Remove(line);booking.ServicesSubtotal-=line.TotalPrice;
+        if(booking.PromotionId!=null){var p=await promotions.GetAsync(booking.PromotionId.Value);if(p!=null)booking.DiscountAmount=PromotionDiscount(p,booking);}
+        Recalculate(booking);AddEvent(booking,"Ek hizmet kaldırıldı",$"{line.ServiceName} rezervasyondan kaldırıldı.",actor);return true;
+    });
+    public Task ApplyPromotionAsync(Guid reservationId,string code,Guid? customerId=null,string actor="Sistem") => Write(async () =>
+    {
+        var booking=await reservations.GetAsync(reservationId)??throw new AppException("Rezervasyon bulunamadı.");EnsureEditable(booking,customerId);
+        var normalized=NormalizeCode(code);var promotion=(await promotions.ListAsync(x=>x.Code==normalized)).SingleOrDefault()??throw new AppException("Kampanya kodu bulunamadı.");
+        ValidatePromotion(promotion,booking);
+        if(booking.PromotionId==promotion.Id)throw new AppException("Bu kampanya zaten uygulanmış.");
+        if(booking.PromotionId!=null){var old=await promotions.GetAsync(booking.PromotionId.Value);if(old!=null&&old.TimesUsed>0)old.TimesUsed--;}
+        promotion.TimesUsed++;booking.PromotionId=promotion.Id;booking.PromotionCode=promotion.Code;booking.DiscountAmount=PromotionDiscount(promotion,booking);Recalculate(booking);
+        AddEvent(booking,"Kampanya uygulandı",$"{promotion.Code} koduyla {booking.DiscountAmount:N2} TRY indirim uygulandı.",actor);return true;
+    });
+    public Task RemovePromotionAsync(Guid reservationId,Guid? customerId=null,string actor="Sistem") => Write(async () =>
+    {
+        var booking=await reservations.GetAsync(reservationId)??throw new AppException("Rezervasyon bulunamadı.");EnsureEditable(booking,customerId);
+        if(booking.PromotionId==null)throw new AppException("Rezervasyonda uygulanan kampanya yok.");
+        var promotion=await promotions.GetAsync(booking.PromotionId.Value);if(promotion!=null&&promotion.TimesUsed>0)promotion.TimesUsed--;
+        var code=booking.PromotionCode;booking.PromotionId=null;booking.PromotionCode="";booking.DiscountAmount=0;Recalculate(booking);
+        AddEvent(booking,"Kampanya kaldırıldı",$"{code} kampanyası rezervasyondan kaldırıldı.",actor);return true;
+    });
     public Task ChangeBookingAsync(Guid id, ReservationStatus target, Guid? customerId=null,string actor="Sistem") => Write(async () =>
     {
         var booking=await reservations.GetAsync(id) ?? throw new AppException("Rezervasyon bulunamadı.");
@@ -189,6 +316,11 @@ public sealed class HotelService(
                 break;
             case ReservationStatus.Cancelled:
                 if(booking.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed)) throw new AppException("Bu rezervasyon iptal edilemez.");
+                if(booking.PromotionId!=null)
+                {
+                    var promotion=await promotions.GetAsync(booking.PromotionId.Value);
+                    if(promotion!=null&&promotion.TimesUsed>0)promotion.TimesUsed--;
+                }
                 break;
             case ReservationStatus.CheckedIn:
                 if(booking.Status!=ReservationStatus.Confirmed || clock.Today<booking.CheckInDate || clock.Today>=booking.CheckOutDate)
@@ -274,5 +406,17 @@ public sealed class HotelService(
         var allRooms=await rooms.ListAsync(r=>r.IsActive); var allBookings=await reservations.ListAsync(); var openJobs=await jobs.ListAsync(j=>j.CompletedAtUtc==null);
         return new(allRooms.Count,allRooms.Count(r=>r.Status==RoomStatus.Occupied),allBookings.Count(r=>r.Status==ReservationStatus.Pending),
             openJobs.Count,allBookings.Where(r=>r.Status==ReservationStatus.CheckedOut).Sum(r=>r.TotalPrice));
+    }
+    public async Task<CalendarDto> CalendarAsync(DateOnly start)
+    {
+        var end=start.AddDays(7);
+        var allRooms=(await rooms.ListAsync(x=>x.IsActive)).OrderBy(x=>x.Number).ToList();
+        var entries=(await reservations.ListAsync(x=>x.CheckInDate<end&&x.CheckOutDate>start&&
+            (x.Status==ReservationStatus.Pending||x.Status==ReservationStatus.Confirmed||x.Status==ReservationStatus.CheckedIn)))
+            .Select(x=>new CalendarEntryDto(x.Id,x.Code,x.GuestName,x.RoomNumber,x.CheckInDate,x.CheckOutDate,x.Status)).ToList();
+        var result=allRooms.Select(room=>new CalendarRoomDto(room.Id,room.Number,room.RoomType.Name,
+            Enumerable.Range(0,7).Select(offset=>start.AddDays(offset)).Select(date=>new CalendarDayDto(date,
+                entries.Where(x=>x.RoomNumber==room.Number&&x.CheckInDate<=date&&x.CheckOutDate>date).OrderBy(x=>x.Status).ToList())).ToList())).ToList();
+        return new(start,end.AddDays(-1),result);
     }
 }

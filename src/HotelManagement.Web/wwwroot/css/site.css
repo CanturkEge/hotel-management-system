@@ -356,6 +356,26 @@ details > form { margin-top: 1rem; }
     .management-layout { grid-template-columns: 1fr; }
     .bulk-room-panel { position: static; }
 }
+.detail-actions { display:flex; justify-content:flex-end; margin:-.5rem 0 1rem; }
+.reservation-extras,.promotion-box { margin-top:1rem; }
+.reservation-extras .list-row span,.management-split .list-row span { display:flex; flex-direction:column; gap:.3rem; }
+.inline-form { display:grid; grid-template-columns:minmax(240px,1fr) 100px auto; gap:.75rem; align-items:end; margin-top:1rem; }
+.inline-form label { margin:0; }
+.management-split { align-items:start; grid-template-columns:minmax(300px,.8fr) minmax(440px,1.2fr); }
+.management-split .list-row > span:last-child { align-items:flex-end; }
+.calendar-nav { display:flex; gap:.5rem; flex-wrap:wrap; }
+.calendar-wrap { overflow:auto; border:1px solid var(--line); border-radius:var(--radius); background:#fff; box-shadow:var(--shadow-sm); }
+.booking-calendar { min-width:1050px; width:100%; border-collapse:separate; border-spacing:0; }
+.booking-calendar th,.booking-calendar td { min-width:130px; width:13%; border-right:1px solid var(--line); border-bottom:1px solid var(--line); vertical-align:top; }
+.booking-calendar thead th { position:sticky; top:0; z-index:2; background:var(--sand); }
+.booking-calendar tr > th:first-child { position:sticky; left:0; z-index:1; min-width:120px; width:120px; background:#fff; }
+.booking-calendar thead tr > th:first-child { z-index:3; background:var(--sand); }
+.booking-calendar th small,.booking-calendar th strong { display:block; }
+.calendar-entry { display:flex; flex-direction:column; gap:.2rem; margin:.25rem 0; padding:.55rem; border-left:3px solid var(--gold); border-radius:4px; background:#f7f1e6; color:var(--ink); text-decoration:none; }
+.calendar-entry.status-1 { border-color:#b7822e; background:#fff6df; }
+.calendar-entry.status-2 { border-color:#237a57; background:#edf8f2; }
+.calendar-entry.status-3 { border-color:#235f9a; background:#edf5fc; }
+
 @media (max-width: 900px) {
     .header-shell, .footer-shell, .staff-nav-shell, .container { width: min(100% - 2.5rem,1380px); }
     .hero { gap: 2rem; } .hero-note { right: -.6rem; }
@@ -364,6 +384,9 @@ details > form { margin-top: 1rem; }
     .summary-grid { grid-template-columns: 1fr 1fr; }
     .experience-section,.about-hero,.story-grid,.contact-layout { grid-template-columns: 1fr; }
     .editor-columns,.detail-grid { grid-template-columns: 1fr; }
+    .management-split { grid-template-columns:1fr; }
+    .inline-form { grid-template-columns:1fr 90px; }
+    .inline-form button { grid-column:1/-1; }
     .about-hero figure { order: 0; }
     .about-hero img { min-height: 360px; }
     .footer-grid { grid-template-columns: 1.5fr 1fr 1fr; }
@@ -427,6 +450,8 @@ details > form { margin-top: 1rem; }
     .booking-card-v2 > header,.booking-actions { align-items: flex-start; flex-direction: column; }
     .booking-total { text-align: left; }
     .booking-facts { grid-template-columns: 1fr; }
+    .inline-form { grid-template-columns:1fr; }
+    .inline-form button { grid-column:auto; }
     .booking-progress { grid-template-columns: 1fr; gap: .6rem; }
     .booking-progress div::after { top: 14px; right: auto; bottom: -12px; left: 7px; width: 2px; height: auto; }
     .booking-progress small { padding: 0; }

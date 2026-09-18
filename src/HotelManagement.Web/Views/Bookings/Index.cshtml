@@ -59,6 +59,8 @@
             <div class="actions">
             <a class="button small secondary" asp-action="Details" asp-route-id="@r.Id">Detaylar</a>
             @if(r.Status is ReservationStatus.Pending or ReservationStatus.Confirmed)
+            {<a class="button small secondary" asp-action="Edit" asp-route-id="@r.Id">Düzenle</a>}
+            @if(r.Status is ReservationStatus.Pending or ReservationStatus.Confirmed)
             {<form asp-action="Cancel" method="post" data-confirm="Rezervasyon iptal edilsin mi?"><input type="hidden" name="id" value="@r.Id" /><button class="danger small" type="submit">Rezervasyonu iptal et</button></form>}
             @if(r.Status==ReservationStatus.CheckedOut&&!r.HasReview)
             {<details class="review-details"><summary class="button small secondary">Konaklamanı değerlendir</summary><form asp-action="Review" method="post" class="form-stack"><input type="hidden" name="ReservationId" value="@r.Id" /><label>Puan<select name="Rating"><option value="5">5 · Çok iyi</option><option value="4">4 · İyi</option><option value="3">3 · Orta</option><option value="2">2 · Kötü</option><option value="1">1 · Çok kötü</option></select></label><label>Yorum<textarea name="Comment" required minlength="5" maxlength="1500" rows="3"></textarea></label><button type="submit">Yorumu gönder</button></form></details>}

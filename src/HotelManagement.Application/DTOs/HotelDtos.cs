@@ -56,6 +56,43 @@ public class StayPackageInput
     public bool IsActive { get; set; } = true;
 }
 
+public class ReservationEditInput
+{
+    public Guid Id { get; set; }
+    public Guid RoomId { get; set; }
+    public Guid StayPackageId { get; set; }
+    public DateOnly CheckInDate { get; set; }
+    public DateOnly CheckOutDate { get; set; }
+    [Range(1,20)] public int GuestCount { get; set; } = 1;
+    [Required, StringLength(100)] public string GuestName { get; set; } = "";
+    [Required, StringLength(30, MinimumLength = 7)] public string GuestPhone { get; set; } = "";
+}
+
+public class ExtraServiceInput
+{
+    public Guid Id { get; set; }
+    [Required, StringLength(100)] public string Name { get; set; } = "";
+    [Required, StringLength(500)] public string Description { get; set; } = "";
+    [Range(typeof(decimal), "0", "1000000")] public decimal Price { get; set; }
+    [Range(0,999)] public int SortOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class PromotionInput
+{
+    public Guid Id { get; set; }
+    [Required, StringLength(30)] public string Code { get; set; } = "";
+    [Required, StringLength(100)] public string Name { get; set; } = "";
+    [Required, StringLength(500)] public string Description { get; set; } = "";
+    public PromotionKind Kind { get; set; } = PromotionKind.Percentage;
+    [Range(typeof(decimal), "0.01", "1000000")] public decimal Value { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
+    [Range(1,30)] public int MinimumNights { get; set; } = 1;
+    [Range(1,1000000)] public int? UsageLimit { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
 public class ReviewInput
 {
     public Guid ReservationId { get; set; }
@@ -78,16 +115,26 @@ public record RoomDto(Guid Id, string Number, int Floor, Guid RoomTypeId, string
     decimal Price, int Capacity, RoomStatus Status, bool IsActive);
 public record StayPackageDto(Guid Id, string Name, string Description, string Benefits,
     decimal PricePerNight, bool IsActive, int SortOrder);
+public record ExtraServiceDto(Guid Id,string Name,string Description,decimal Price,bool IsActive,int SortOrder);
+public record PromotionDto(Guid Id,string Code,string Name,string Description,PromotionKind Kind,decimal Value,
+    DateOnly StartDate,DateOnly EndDate,int MinimumNights,int? UsageLimit,int TimesUsed,bool IsActive);
+public record ReservationExtraDto(Guid Id,Guid ExtraServiceId,string ServiceName,decimal UnitPrice,int Quantity,decimal TotalPrice);
 public record BusyPeriod(DateOnly Start, DateOnly End);
 public record ReservationDto(Guid Id, string Code, Guid CustomerId, string RoomNumber, string TypeName,
     DateOnly CheckInDate, DateOnly CheckOutDate, int GuestCount, string GuestName, string GuestPhone,
     decimal TotalPrice, ReservationStatus Status, bool HasReview, Guid? StayPackageId, string PackageName,
     string PackageDescription, string PackageBenefits, decimal NightlyPrice, decimal PackagePricePerNight,
-    decimal RoomSubtotal, decimal PackageSubtotal);
+    decimal RoomSubtotal, decimal PackageSubtotal, decimal ServicesSubtotal, string PromotionCode, decimal DiscountAmount);
 public record ReservationEventDto(Guid Id, ReservationStatus Status, string Title, string Description,
     string Actor, DateTime CreatedAtUtc);
-public record ReservationDetailsDto(ReservationDto Reservation, IReadOnlyList<ReservationEventDto> Events);
+public record ReservationDetailsDto(ReservationDto Reservation, IReadOnlyList<ReservationEventDto> Events,
+    IReadOnlyList<ReservationExtraDto> Extras, IReadOnlyList<ExtraServiceDto> AvailableExtras);
 public record ReviewDto(Guid Id, Guid RoomTypeId, string TypeName, int Rating, string Comment, bool IsApproved, DateTime CreatedAtUtc);
 public record JobDto(Guid Id, Guid RoomId, string RoomNumber, JobKind Kind, string Description,
     DateTime CreatedAtUtc, DateTime? CompletedAtUtc, string? CompletedBy);
 public record DashboardDto(int ActiveRooms, int OccupiedRooms, int PendingBookings, int OpenJobs, decimal CompletedStayRevenue);
+public record CalendarEntryDto(Guid ReservationId,string Code,string GuestName,string RoomNumber,DateOnly CheckInDate,
+    DateOnly CheckOutDate,ReservationStatus Status);
+public record CalendarDayDto(DateOnly Date,IReadOnlyList<CalendarEntryDto> Entries);
+public record CalendarRoomDto(Guid RoomId,string RoomNumber,string TypeName,IReadOnlyList<CalendarDayDto> Days);
+public record CalendarDto(DateOnly Start,DateOnly End,IReadOnlyList<CalendarRoomDto> Rooms);

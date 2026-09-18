@@ -38,9 +38,9 @@
 {
     <nav class="staff-nav" aria-label="Personel işlemleri"><div class="staff-nav-shell">
         @if(User.IsInRole(Roles.Admin)||User.IsInRole(Roles.SuperAdmin)||User.IsInRole(Roles.Reception))
-        {<a asp-controller="Staff" asp-action="Index">Genel bakış</a><a asp-controller="Staff" asp-action="Reservations">Rezervasyonlar</a>}
+        {<a asp-controller="Staff" asp-action="Index">Genel bakış</a><a asp-controller="Staff" asp-action="Reservations">Rezervasyonlar</a><a asp-controller="Staff" asp-action="Calendar">Takvim</a>}
         @if(User.IsInRole(Roles.Admin)||User.IsInRole(Roles.SuperAdmin))
-        {<a asp-controller="Content" asp-action="Index">Site içeriği</a><a asp-controller="Management" asp-action="Packages">Paketler</a><a asp-controller="Management" asp-action="Types">Oda tipleri</a><a asp-controller="Management" asp-action="Rooms">Fiziksel odalar</a><a asp-controller="Management" asp-action="Reviews">Yorumlar</a>}
+        {<a asp-controller="Content" asp-action="Index">Site içeriği</a><a asp-controller="Management" asp-action="Packages">Paketler</a><a asp-controller="Management" asp-action="ExtraServices">Ek hizmetler</a><a asp-controller="Management" asp-action="Promotions">Kampanyalar</a><a asp-controller="Management" asp-action="Types">Oda tipleri</a><a asp-controller="Management" asp-action="Rooms">Fiziksel odalar</a><a asp-controller="Management" asp-action="Reviews">Yorumlar</a>}
         <a asp-controller="Jobs" asp-action="Index">Temizlik & bakım</a>
         @if(User.IsInRole(Roles.SuperAdmin)){<a asp-controller="Users" asp-action="Index">Hesaplar & yetkiler</a>}
     </div></nav>

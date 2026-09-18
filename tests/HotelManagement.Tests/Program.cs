@@ -30,6 +30,12 @@ await Test("Book stores price snapshot",async ()=> {var f=new Fixture();var id=a
 await Test("Gold package is included in the server-side total",async ()=> {var f=new Fixture();f.Package.PricePerNight=750;var id=await f.Service.BookAsync(f.Customer,f.Input());var r=await f.Bookings.GetAsync(id);Assert(r!.RoomSubtotal==7000 && r.PackageSubtotal==1500 && r.TotalPrice==8500 && r.PackageName=="Gold");});
 await Test("Inactive package cannot be booked",async ()=> {var f=new Fixture();f.Package.IsActive=false;await Reject(()=>f.Service.BookAsync(f.Customer,f.Input()));});
 await Test("Booking and status changes create history",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input(),"Test müşteri");await f.Service.ChangeBookingAsync(id,ReservationStatus.Confirmed,null,"Test resepsiyon");var detail=await f.Service.BookingDetailsAsync(id,f.Customer);Assert(detail.Events.Count==2 && detail.Events[0].Actor=="Test müşteri" && detail.Events[1].Status==ReservationStatus.Confirmed);});
+await Test("Customer can edit room dates and package before check-in",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());var secondType=new RoomType{Name="Suite",Description="Test",BasePrice=5000,Capacity=3,BedCount=2,SizeInSquareMeters=40};var second=new Room{Number="202",RoomTypeId=secondType.Id,RoomType=secondType};f.Types.Add(secondType);f.Rooms.Add(second);await f.Service.UpdateBookingAsync(new(){Id=id,RoomId=second.Id,StayPackageId=f.Package.Id,CheckInDate=day.AddDays(1),CheckOutDate=day.AddDays(4),GuestCount=3,GuestName="Yeni Misafir",GuestPhone="05001112233"},f.Customer,"Müşteri");var r=await f.Bookings.GetAsync(id);Assert(r!.RoomNumber=="202"&&r.RoomSubtotal==15000&&r.TotalPrice==15000&&(await f.Events.ListAsync()).Last().Title=="Rezervasyon güncellendi");});
+await Test("Completed booking cannot be edited",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());(await f.Bookings.GetAsync(id))!.Status=ReservationStatus.CheckedOut;var input=new ReservationEditInput{Id=id,RoomId=f.Room.Id,StayPackageId=f.Package.Id,CheckInDate=day,CheckOutDate=day.AddDays(2),GuestCount=2,GuestName="Test",GuestPhone="05000000000"};await Reject(()=>f.Service.UpdateBookingAsync(input,f.Customer));});
+await Test("Extra service updates reservation total and history",async ()=> {var f=new Fixture();var service=new ExtraService{Name="Transfer",Description="Havalimanı",Price=1200};f.ExtraServices.Add(service);var id=await f.Service.BookAsync(f.Customer,f.Input());await f.Service.AddExtraAsync(id,service.Id,2,f.Customer,"Müşteri");var r=await f.Bookings.GetAsync(id);Assert(r!.ServicesSubtotal==2400&&r.TotalPrice==9400&&(await f.ReservationExtras.ListAsync()).Single().Quantity==2);});
+await Test("Promotion applies percentage discount with limit",async ()=> {var f=new Fixture();var promotion=new Promotion{Code="MERIDIAN10",Name="Test",Description="Test",Kind=PromotionKind.Percentage,Value=10,StartDate=day,EndDate=day.AddDays(30),MinimumNights=2,UsageLimit=1};f.Promotions.Add(promotion);var id=await f.Service.BookAsync(f.Customer,f.Input());await f.Service.ApplyPromotionAsync(id," meridian-10 ",f.Customer,"Müşteri");var r=await f.Bookings.GetAsync(id);Assert(r!.DiscountAmount==700&&r.TotalPrice==6300&&promotion.TimesUsed==1);});
+await Test("Promotion usage limit blocks the next reservation",async ()=> {var f=new Fixture();var promotion=new Promotion{Code="SON1",Name="Son",Description="Test",Kind=PromotionKind.FixedAmount,Value=500,StartDate=day,EndDate=day.AddDays(30),UsageLimit=1,TimesUsed=1};f.Promotions.Add(promotion);var id=await f.Service.BookAsync(f.Customer,f.Input());await Reject(()=>f.Service.ApplyPromotionAsync(id,"SON1",f.Customer));});
+await Test("Calendar maps active stays into each occupied day",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());await f.Service.ChangeBookingAsync(id,ReservationStatus.Confirmed);var calendar=await f.Service.CalendarAsync(day);Assert(calendar.Rooms.Single().Days.Count(x=>x.Entries.Count==1)==2);});
 await Test("Customer cannot view another booking detail",async ()=> {var f=new Fixture();var id=await f.Service.BookAsync(f.Customer,f.Input());await Reject(()=>f.Service.BookingDetailsAsync(id,Guid.NewGuid()));});
 await Test("Past dates rejected",async ()=> {var f=new Fixture();var i=f.Input();i.CheckInDate=day.AddDays(-1);await Reject(()=>f.Service.BookAsync(f.Customer,i));});
 await Test("Same-day checkout rejected",async ()=> {var f=new Fixture();var i=f.Input();i.CheckOutDate=i.CheckInDate;await Reject(()=>f.Service.BookAsync(f.Customer,i));});
@@ -93,6 +99,9 @@ sealed class Fixture
     public readonly StayPackage Package=new(){Name="Gold",Description="Test paket",Benefits="Kahvaltı",PricePerNight=0};
     public readonly MemoryRepository<StayPackage> Packages=new();
     public readonly MemoryRepository<ReservationEvent> Events=new();
+    public readonly MemoryRepository<ExtraService> ExtraServices=new();
+    public readonly MemoryRepository<ReservationExtra> ReservationExtras=new();
+    public readonly MemoryRepository<Promotion> Promotions=new();
     public HotelService Service {get;}
     public Fixture()
     {
@@ -100,7 +109,7 @@ sealed class Fixture
         Types.Add(Type);
         Rooms.Add(Room);
         Packages.Add(Package);
-        Service=new(Types,Rooms,Bookings,Reviews,Jobs,Packages,Events,new MemoryUnit(),new FixedClock());
+        Service=new(Types,Rooms,Bookings,Reviews,Jobs,Packages,Events,ExtraServices,ReservationExtras,Promotions,new MemoryUnit(),new FixedClock());
     }
     public BookingInput Input()=>new(){RoomId=Room.Id,StayPackageId=Package.Id,CheckInDate=new(2026,9,9),CheckOutDate=new(2026,9,11),GuestCount=2,GuestName="Test User",GuestPhone="05000000000"};
 }

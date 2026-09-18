@@ -17,6 +17,12 @@ public class StaffController(IHotelService hotel,IAccountService accounts,IHotel
     }
     [Authorize(Roles=Roles.Desk)]
     public async Task<IActionResult> Reservations()=>View(await hotel.BookingsAsync());
+    [Authorize(Roles=Roles.Desk)]
+    public async Task<IActionResult> Calendar(DateOnly? start)
+    {
+        var date=start??clock.Today;var monday=date.AddDays(-((7+(int)date.DayOfWeek-(int)DayOfWeek.Monday)%7));
+        return View(await hotel.CalendarAsync(monday));
+    }
     [Authorize(Roles=Roles.Desk),HttpGet]
     public async Task<IActionResult> Create()=>View(new StaffBookingPage {Rooms=await hotel.RoomsAsync(),
         Customers=(await accounts.UsersAsync()).Where(x=>x.Role==Roles.Customer).ToList(),

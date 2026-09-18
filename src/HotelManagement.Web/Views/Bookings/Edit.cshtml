@@ -1,0 +1,14 @@
+@model BookingEditPage
+@{ViewData["Title"]="Rezervasyonu düzenle";}
+<a class="back-link" asp-action="Details" asp-route-id="@Model.Input.Id">← Rezervasyon detayına dön</a>
+<p class="eyebrow">REZERVASYONU DÜZENLE</p><h1>Oda, tarih ve paketi güncelleyin.</h1>
+<form asp-action="Edit" method="post" class="panel form-stack booking-edit-form">
+<div asp-validation-summary="All" class="validation" role="alert"></div><input asp-for="Input.Id" type="hidden" />
+<div class="form-grid"><label>Giriş<input asp-for="Input.CheckInDate" type="date" required /></label><label>Çıkış<input asp-for="Input.CheckOutDate" type="date" required /></label></div>
+<label>Oda<select asp-for="Input.RoomId" required>@foreach(var room in Model.Rooms){<option value="@room.Id">@room.TypeName · Oda @room.Number · @Ui.Money(room.Price)/gece · @room.Capacity kişi</option>}</select></label>
+<label>Misafir sayısı<input asp-for="Input.GuestCount" type="number" min="1" max="20" required /></label>
+<div class="form-grid"><label>Konaklayacak kişi<input asp-for="Input.GuestName" required maxlength="100" /></label><label>Telefon<input asp-for="Input.GuestPhone" type="tel" required minlength="7" maxlength="30" /></label></div>
+<fieldset class="package-picker"><legend>Konaklama paketi</legend>@foreach(var package in Model.Packages){<label class="package-option"><input asp-for="Input.StayPackageId" type="radio" value="@package.Id" required /><span><strong>@package.Name</strong><small>@package.Description</small></span><b>@(package.PricePerNight==0?"Dahil":$"+{Ui.Money(package.PricePerNight)} / gece")</b></label>}</fieldset>
+<p class="form-note">Yeni toplam oda, gece ve paket seçimine göre sunucuda yeniden hesaplanır. Müsait olmayan oda veya tarih kabul edilmez.</p>
+<button type="submit">Değişiklikleri kaydet</button>
+</form>

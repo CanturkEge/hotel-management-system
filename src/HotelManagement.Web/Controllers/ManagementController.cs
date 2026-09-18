@@ -10,6 +10,29 @@ namespace HotelManagement.Web.Controllers;
 [Authorize(Roles=Roles.Managers)]
 public class ManagementController(IHotelService hotel,IContentService content):Controller
 {
+    public async Task<IActionResult> ExtraServices(Guid? id)
+    {
+        var page=new ExtraServicesPage{Items=await hotel.ExtraServicesAsync(true)};
+        if(id!=null){var item=page.Items.FirstOrDefault(x=>x.Id==id);if(item==null)return NotFound();page.Input=new(){Id=item.Id,Name=item.Name,Description=item.Description,Price=item.Price,SortOrder=item.SortOrder,IsActive=item.IsActive};}
+        return View(page);
+    }
+    [HttpPost] public async Task<IActionResult> SaveExtraService(ExtraServicesPage page)
+    {
+        if(ModelState.IsValid)try{await hotel.SaveExtraServiceAsync(page.Input);TempData["Success"]="Ek hizmet kaydedildi.";return RedirectToAction(nameof(ExtraServices));}catch(AppException ex){ModelState.AddModelError("",ex.Message);}
+        page.Items=await hotel.ExtraServicesAsync(true);return View(nameof(ExtraServices),page);
+    }
+    public async Task<IActionResult> Promotions(Guid? id)
+    {
+        var page=new PromotionsPage{Items=await hotel.PromotionsAsync(true)};
+        if(id!=null){var item=page.Items.FirstOrDefault(x=>x.Id==id);if(item==null)return NotFound();page.Input=new(){Id=item.Id,Code=item.Code,Name=item.Name,Description=item.Description,Kind=item.Kind,Value=item.Value,StartDate=item.StartDate,EndDate=item.EndDate,MinimumNights=item.MinimumNights,UsageLimit=item.UsageLimit,IsActive=item.IsActive};}
+        else page.Input=new(){StartDate=DateOnly.FromDateTime(DateTime.Today),EndDate=DateOnly.FromDateTime(DateTime.Today).AddMonths(3)};
+        return View(page);
+    }
+    [HttpPost] public async Task<IActionResult> SavePromotion(PromotionsPage page)
+    {
+        if(ModelState.IsValid)try{await hotel.SavePromotionAsync(page.Input);TempData["Success"]="Kampanya kaydedildi.";return RedirectToAction(nameof(Promotions));}catch(AppException ex){ModelState.AddModelError("",ex.Message);}
+        page.Items=await hotel.PromotionsAsync(true);return View(nameof(Promotions),page);
+    }
     public async Task<IActionResult> Packages()=>View(await hotel.PackagesAsync(true));
     [HttpGet] public async Task<IActionResult> EditPackage(Guid? id)
     {
